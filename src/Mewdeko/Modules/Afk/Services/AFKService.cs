@@ -151,26 +151,6 @@ public class AfkService : INService
                         {
                             //ignored
                         }
-
-                        return;
-                    }
-                }
-
-                if (msg.MentionedUsers.Count > 0 && !msg.Author.IsBot)
-                {
-                    if (msg.Content.Contains($"{_cmd.GetPrefix(user.Guild)}afkremove")
-                        || msg.Content.Contains($"{_cmd.GetPrefix(user.Guild)}afkrm")
-                        || msg.Content.Contains($"{_cmd.GetPrefix(user.Guild)}afk")) return;
-                    if (GetDisabledAfkChannels(user.GuildId) is not "0" and not null)
-                    {
-                        var chans = GetDisabledAfkChannels(user.GuildId);
-                        var e = chans.Split(",");
-                        if (e.Contains(msg.Channel.Id.ToString())) return;
-                    }
-
-                    if (msg.MentionedUsers.FirstOrDefault() is not IGuildUser mentuser) return;
-                    if (IsAfk(user.Guild, mentuser))
-                    {
                         var afkdel = GetAfkDel(((ITextChannel)msg.Channel).GuildId);
                         var replacer = new ReplacementBuilder()
                                        .WithOverride("%afk.message%",
