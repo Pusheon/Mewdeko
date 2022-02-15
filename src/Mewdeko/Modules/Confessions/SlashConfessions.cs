@@ -13,6 +13,9 @@ public class SlashConfessions : MewdekoSlashModuleBase<ConfessionService>
     [SlashCommand("confess", "Sends your confession to the confession channel.", true), RequireContext(ContextType.Guild), CheckPermissions, BlacklistCheck]
     public async Task Confess(string confession, IAttachment attachment = null)
     {
+        var attachment1 = attachment == null
+            ? null
+            : attachment.Url;
         if (!Service.ConfessionChannels.TryGetValue(ctx.Guild.Id, out _))
         {
             await ctx.Interaction.SendEphemeralErrorAsync("This server does not have confessions enabled!");
@@ -25,7 +28,7 @@ public class SlashConfessions : MewdekoSlashModuleBase<ConfessionService>
                 await ctx.Interaction.SendEphemeralErrorAsync("You are blacklisted from confessions here!!");
                 return;
             }
-            await Service.SendConfession(ctx.Guild.Id, ctx.User, confession, ctx.Channel, ctx, attachment.Url);
+            await Service.SendConfession(ctx.Guild.Id, ctx.User, confession, ctx.Channel, ctx, attachment1);
         }
         else
         {
