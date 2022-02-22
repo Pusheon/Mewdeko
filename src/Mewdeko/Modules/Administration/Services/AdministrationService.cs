@@ -18,6 +18,7 @@ public class AdministrationService : INService
 {
     private readonly DbService _db;
     private readonly LogCommandService _logService;
+    private ConcurrentDictionary<ulong, int> MessagesSent = new();
 
     public AdministrationService(Mewdeko bot, CommandHandler cmdHandler, DbService db,
         LogCommandService logService, DiscordSocketClient client)
@@ -41,8 +42,33 @@ public class AdministrationService : INService
             .ToConcurrent());
         client.JoinedGuild += SendHelp;
         cmdHandler.CommandExecuted += DelMsgOnCmd_Handler;
+        
+        client.MessageReceived += GrantKarutaRole;
     }
-    
+
+    private async Task GrantKarutaRole(SocketMessage arg)
+    {
+        if (arg.Channel is not ITextChannel channel)
+            return;
+
+        if (channel.Id != 940654772070019132 && channel.Id != 809636962599829574)
+            return;
+
+        var gUser = arg.Author as SocketGuildUser;
+        if (gUser.Roles.Select(x => x.Id).Contains<ulong>(940669747282980954))
+            return;
+
+        if (!MessagesSent.TryGetValue(gUser.Id, out var amount) || amount < 2)
+            MessagesSent.AddOrUpdate(gUser.Id, amount++, (_, _) => amount++);
+
+        else
+        {
+            await gUser.AddRoleAsync(940669747282980954);
+            MessagesSent.TryRemove(gUser.Id, out _);
+        }
+    }
+
+
     private ConcurrentDictionary<ulong, ulong> StaffRole { get; }
     private ConcurrentDictionary<ulong, ulong> MemberRole { get; }
     public ConcurrentHashSet<ulong> DeleteMessagesOnCommand { get; }
