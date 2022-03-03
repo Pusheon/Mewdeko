@@ -1,24 +1,6 @@
 h:
   - help
   - h
-starboardallowbots:
-  - starboardallowbots
-  - starbab
-starboardremoveondelete:
-  - starboardremoveondelete
-  - srod
-starboardremoveonreactionscleared:
-  - starboardremoveonreactionscleared
-  - srrc
-starboardremoveonbelowthreshold:
-  - starboardremoveonbelowthreshold
-  - srobt
-starboardwlmode:
-  - starboardwlmode
-  - swm
-starboardchtoggle:
-  - starboardchtoggle
-  - scht
 gencmdlist:
   - gencmdlist
 donate:
@@ -512,6 +494,9 @@ permrole:
   - pr
 verbose:
   - verbose
+verify:
+  - verify
+  - v
 srvrmdl:
   - srvrmdl
   - sm
@@ -1317,9 +1302,9 @@ autobutts:
 eightball:
   - eightball
   - 8ball
-feedadd:
+feed:
+  - feed
   - feedadd
-  - rss
 feedremove:
   - feedremove
   - feedrm
@@ -1420,6 +1405,3 @@ nsfwtoggle:
   - nsfwtgl
 economy:
   - economy
-verify:
-  - verify
-  - v
