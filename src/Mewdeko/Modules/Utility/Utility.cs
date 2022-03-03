@@ -15,7 +15,6 @@ using Mewdeko.Modules.Utility.Common;
 using Mewdeko.Modules.Utility.Services;
 using Mewdeko.Services.Impl;
 using Serilog;
-using Swan;
 
 namespace Mewdeko.Modules.Utility;
 
@@ -28,12 +27,15 @@ public partial class Utility : MewdekoModuleBase<UtilityService>
     private readonly DownloadTracker _tracker;
     private readonly InteractiveService _interactivity;
     private readonly ICoordinator _coordinator;
+    private readonly GreetSettingsService _greetService;
 
     public Utility(
         DiscordSocketClient client,
-        IStatsService stats, IBotCredentials creds, DownloadTracker tracker, InteractiveService serv, ICoordinator coordinator)
+        IStatsService stats, IBotCredentials creds, DownloadTracker tracker, InteractiveService serv, ICoordinator coordinator,
+        GreetSettingsService greetService)
     {
         _coordinator = coordinator;
+        _greetService = greetService;
         _interactivity = serv;
         _client = client;
         _stats = stats;
@@ -43,9 +45,11 @@ public partial class Utility : MewdekoModuleBase<UtilityService>
     [MewdekoCommand, Usage, Description, Alias, RequireContext(ContextType.Guild), OfficialServerMod]
     public async Task Verify(IGuildUser user)
     {
+        var channel = await ctx.Guild.GetTextChannelAsync(744880021692350464);
         var logChannel = await ctx.Guild.GetTextChannelAsync(945253905485430794);
-        await user.AddRolesAsync(new List<ulong> { 788884380521070614, 837761148140388382 });
+        await user.AddRolesAsync(new List<ulong>() { 788884380521070614, 837761148140388382 });
         await user.RemoveRoleAsync(794777895188692992);
+        await _greetService.GreetTest(channel, user);
         await logChannel.SendMessageAsync(
             $"{user.Mention} {user.Id} has been verified by {ctx.User.Mention} {ctx.User.Id}");
     }
@@ -183,9 +187,8 @@ public partial class Utility : MewdekoModuleBase<UtilityService>
             return;
         }
 
-        
-        var msg = Service.GetSnipes(ctx.Guild.Id).Result?.Where(x => x.Edited == 0)
-                         .LastOrDefault(x => x.ChannelId == ctx.Channel.Id);
+        var sset = await Service.GetSnipes(ctx.Guild.Id);
+        var msg = (await Service.GetSnipes(ctx.Guild.Id)).LastOrDefault();
         if (msg is null)
         {
             await ctx.Channel.SendErrorAsync("There is nothing to snipe here!");
@@ -222,7 +225,7 @@ public partial class Utility : MewdekoModuleBase<UtilityService>
             return;
         }
 
-        var msgs = Service.GetSnipes(ctx.Guild.Id).Result.Where(x => x.ChannelId == ctx.Channel.Id && x.Edited == 0);
+        var msgs = (await Service.GetSnipes(ctx.Guild.Id)).Where(x => x.ChannelId == ctx.Channel.Id && x.Edited == 0);
         {
             var snipeStores = msgs as SnipeStore[] ?? msgs.ToArray();
             if (!snipeStores.Any())
@@ -271,7 +274,7 @@ public partial class Utility : MewdekoModuleBase<UtilityService>
             return;
         }
 
-        var msgs = Service.GetSnipes(ctx.Guild.Id).Result.Where(x => x.ChannelId == ctx.Channel.Id && x.Edited == 1);
+        var msgs = (await Service.GetSnipes(ctx.Guild.Id)).Where(x => x.ChannelId == ctx.Channel.Id && x.Edited == 1);
         {
             var snipeStores = msgs as SnipeStore[] ?? msgs.ToArray();
             if (!snipeStores.Any())
@@ -320,7 +323,7 @@ public partial class Utility : MewdekoModuleBase<UtilityService>
             return;
         }
 
-        var msg = Service.GetSnipes(ctx.Guild.Id).Result
+        var msg = (await Service.GetSnipes(ctx.Guild.Id))
                          .FirstOrDefault(x => x.ChannelId == ctx.Channel.Id && x.UserId == user1.Id);
         if (msg is null)
         {
@@ -373,8 +376,8 @@ public partial class Utility : MewdekoModuleBase<UtilityService>
             return;
         }
 
-        var msg = Service.GetSnipes(ctx.Guild.Id).Result.Where(x => x.Edited == 0)
-                         .LastOrDefault(x => x.ChannelId == chan.Id);
+        var msg = (await Service.GetSnipes(ctx.Guild.Id)).Where(x => x.Edited == 0)
+                                                         .LastOrDefault(x => x.ChannelId == chan.Id);
         if (msg == null)
         {
             await ctx.Channel.SendErrorAsync("There's nothing to snipe for that channel!");
@@ -408,8 +411,8 @@ public partial class Utility : MewdekoModuleBase<UtilityService>
             return;
         }
 
-        var msg = Service.GetSnipes(ctx.Guild.Id).Result.Where(x => x.Edited == 0)
-                         .LastOrDefault(x => x.ChannelId == chan.Id && x.UserId == user1.Id);
+        var msg = (await Service.GetSnipes(ctx.Guild.Id)).Where(x => x.Edited == 0)
+                                                         .LastOrDefault(x => x.ChannelId == chan.Id && x.UserId == user1.Id);
         {
             if (msg == null)
             {
@@ -464,9 +467,9 @@ public partial class Utility : MewdekoModuleBase<UtilityService>
         }
 
         {
-            var msg = Service.GetSnipes(ctx.Guild.Id).Result
-                             .Where(x => x.Edited == 1)
-                             .LastOrDefault(x => x.ChannelId == ctx.Channel.Id);
+            var msg = (await Service.GetSnipes(ctx.Guild.Id))
+                      .Where(x => x.Edited == 1)
+                      .LastOrDefault(x => x.ChannelId == ctx.Channel.Id);
             if (msg == null)
             {
                 await ctx.Channel.SendErrorAsync("There's nothing to snipe!");
@@ -506,9 +509,9 @@ public partial class Utility : MewdekoModuleBase<UtilityService>
         }
 
         {
-            var msg = Service.GetSnipes(ctx.Guild.Id).Result
-                             .Where(x => x.Edited == 1)
-                             .LastOrDefault(x => x.ChannelId == ctx.Channel.Id && x.UserId == user1.Id);
+            var msg = (await Service.GetSnipes(ctx.Guild.Id))
+                      .Where(x => x.Edited == 1)
+                      .LastOrDefault(x => x.ChannelId == ctx.Channel.Id && x.UserId == user1.Id);
             if (msg == null)
             {
                 await ctx.Channel.SendErrorAsync("There's nothing to snipe for that user!");
@@ -548,9 +551,9 @@ public partial class Utility : MewdekoModuleBase<UtilityService>
         }
 
         {
-            var msg = Service.GetSnipes(ctx.Guild.Id).Result
-                             .Where(x => x.Edited == 1)
-                             .LastOrDefault(x => x.ChannelId == chan.Id);
+            var msg = (await Service.GetSnipes(ctx.Guild.Id))
+                      .Where(x => x.Edited == 1)
+                      .LastOrDefault(x => x.ChannelId == chan.Id);
             if (msg == null)
             {
                 await ctx.Channel.SendErrorAsync("There's nothing to snipe for that channel!");
@@ -590,9 +593,9 @@ public partial class Utility : MewdekoModuleBase<UtilityService>
         }
 
         {
-            var msg = Service.GetSnipes(ctx.Guild.Id).Result
-                             .Where(x => x.Edited == 1)
-                             .LastOrDefault(x => x.ChannelId == chan.Id && x.UserId == user1.Id);
+            var msg = (await Service.GetSnipes(ctx.Guild.Id))
+                      .Where(x => x.Edited == 1)
+                      .LastOrDefault(x => x.ChannelId == chan.Id && x.UserId == user1.Id);
             if (msg == null)
             {
                 await ctx.Channel.SendErrorAsync("There's nothing to snipe for that user or channel!");
@@ -647,8 +650,8 @@ public partial class Utility : MewdekoModuleBase<UtilityService>
         if (arr.Length == 0)
             await ReplyErrorLocalizedAsync("nobody_playing_game").ConfigureAwait(false);
         else
-            await ctx.Channel.SendConfirmAsync("```css\n" + string.Join("\n", arr.GroupBy(_ => i++ / 2)
-                    .Select(ig => string.Concat(ig.Select(el => $"• {el,-27}")))) + "\n```")
+            await ctx.Channel.SendConfirmAsync(
+                         $"```css\n{string.Join("\n", arr.GroupBy(_ => i++ / 2).Select(ig => string.Concat(ig.Select(el => $"• {el,-27}"))))}\n```")
                 .ConfigureAwait(false);
     }
 
@@ -684,16 +687,12 @@ public partial class Utility : MewdekoModuleBase<UtilityService>
         {
             await Task.CompletedTask;
             return new PageBuilder().WithOkColor()
-                                                    .WithTitle(Format.Bold(GetText("inrole_list",
-                                                                   Format.Bold(role.Name)))
-                                                               + $" - {roleUsers.Length}")
+                                                    .WithTitle(
+                                                        $"{Format.Bold(GetText("inrole_list", Format.Bold(role.Name)))} - {roleUsers.Length}")
                                                     .WithDescription(string.Join("\n",
                                                         roleUsers.Skip(page * 20).Take(20)
                                                                  .Select(x => $"{x} `{x.Id}`"))).AddField("User Stats",
-                                                        $"<:online:914548119730024448> {roleUsers.Count(x => x.Status == UserStatus.Online)}"
-                                                        + $"\n<:dnd:914548634178187294> {roleUsers.Count(x => x.Status == UserStatus.DoNotDisturb)}"
-                                                        + $"\n<:idle:914548262424412172> {roleUsers.Count(x => x.Status == UserStatus.Idle)}"
-                                                        + $"\n<:offline:914548368037003355> {roleUsers.Count(x => x.Status == UserStatus.Offline)}");
+                                                        $"<:online:914548119730024448> {roleUsers.Count(x => x.Status == UserStatus.Online)}\n<:dnd:914548634178187294> {roleUsers.Count(x => x.Status == UserStatus.DoNotDisturb)}\n<:idle:914548262424412172> {roleUsers.Count(x => x.Status == UserStatus.Idle)}\n<:offline:914548368037003355> {roleUsers.Count(x => x.Status == UserStatus.Offline)}");
         }
     }
 
@@ -772,7 +771,7 @@ public partial class Utility : MewdekoModuleBase<UtilityService>
                 await ReplyErrorLocalizedAsync("no_roles_on_page").ConfigureAwait(false);
             else
                 await channel.SendConfirmAsync(GetText("roles_page", page, Format.Bold(target.ToString())),
-                    "\n• " + string.Join("\n• ", (IEnumerable<IRole>) roles)).ConfigureAwait(false);
+                    $"\n• {string.Join("\n• ", (IEnumerable<IRole>)roles)}").ConfigureAwait(false);
         }
         else
         {
@@ -782,7 +781,7 @@ public partial class Utility : MewdekoModuleBase<UtilityService>
                 await ReplyErrorLocalizedAsync("no_roles_on_page").ConfigureAwait(false);
             else
                 await channel.SendConfirmAsync(GetText("roles_all_page", page),
-                        "\n• " + string.Join("\n• ", (IEnumerable<IRole>) roles).SanitizeMentions())
+                                 $"\n• {string.Join("\n• ", (IEnumerable<IRole>)roles).SanitizeMentions()}")
                     .ConfigureAwait(false);
         }
     }
