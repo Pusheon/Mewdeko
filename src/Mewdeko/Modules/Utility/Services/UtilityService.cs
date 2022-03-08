@@ -64,7 +64,7 @@ public class UtilityService : INService
             var channel = await _client.GetChannelAsync(946933865866493983);
             var textChannel = channel as ITextChannel;
             var messages = (await textChannel.GetMessagesAsync(1000).FlattenAsync()).Where(x =>
-                DateTimeOffset.Now.Subtract(x.Timestamp).TotalSeconds <= TimeSpan.FromMinutes(10).TotalSeconds);
+                DateTimeOffset.Now.Subtract(x.Timestamp).TotalSeconds >= TimeSpan.FromMinutes(10).TotalSeconds);
             await textChannel.DeleteMessagesAsync(messages);
         }
     }
