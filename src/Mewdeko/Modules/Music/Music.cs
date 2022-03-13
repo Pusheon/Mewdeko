@@ -185,6 +185,7 @@ public class Music : MewdekoModuleBase<MusicService>
                 if (playlistOrSongName is null)
                 {
                     await ctx.Channel.SendErrorAsync("You need to specify a playlist name!");
+                    return;
                 }
 
                 if (Service.GetPlaylists(ctx.User).Select(x => x.Name.ToLower()).Contains(playlistOrSongName?.ToLower()))
@@ -268,7 +269,7 @@ public class Music : MewdekoModuleBase<MusicService>
                         var player = _lavaNode.GetPlayer(ctx.Guild);
                         if (player.State == PlayerState.Playing) continue;
                         await player.PlayAsync(search);
-                        await player.SetVolumeAsync(Service.GetVolume(ctx.Guild.Id)/100);
+                        await player.SetVolumeAsync((await Service.GetVolume(ctx.Guild.Id))/100);
                     }
 
                     await msg.ModifyAsync(x => x.Embed = new EmbedBuilder()
@@ -325,7 +326,7 @@ public class Music : MewdekoModuleBase<MusicService>
                         var player = _lavaNode.GetPlayer(ctx.Guild);
                         if (player.State == PlayerState.Playing) continue;
                         await player.PlayAsync(search);
-                        await player.SetVolumeAsync(Service.GetVolume(ctx.Guild.Id)/100);
+                        await player.SetVolumeAsync((await Service.GetVolume(ctx.Guild.Id))/100);
                     }
 
                     await msg.ModifyAsync(x => x.Embed = new EmbedBuilder()
@@ -738,7 +739,7 @@ public class Music : MewdekoModuleBase<MusicService>
                     await ctx.Channel.SendMessageAsync(embed: eb.Build());
                     if (player.State != PlayerState.Playing)
                         await player.PlayAsync(searchResponse.Tracks.FirstOrDefault());
-                    await player.SetVolumeAsync(Service.GetVolume(ctx.Guild.Id)/100.0F);
+                    await player.SetVolumeAsync((await Service.GetVolume(ctx.Guild.Id))/100.0F);
                     return;
                 }
                 else
@@ -761,7 +762,7 @@ public class Music : MewdekoModuleBase<MusicService>
                     await ctx.Channel.SendMessageAsync(embed: eb.Build());
                     if (player.State != PlayerState.Playing)
                         await player.PlayAsync(searchResponse.Tracks.FirstOrDefault());
-                    await player.SetVolumeAsync(Service.GetVolume(ctx.Guild.Id)/100.0F);
+                    await player.SetVolumeAsync((await Service.GetVolume(ctx.Guild.Id))/100.0F);
                     return;
                 }
             }
@@ -805,7 +806,7 @@ public class Music : MewdekoModuleBase<MusicService>
                 if (player.State != PlayerState.Playing)
                 {
                     await player.PlayAsync(track);
-                    await player.SetVolumeAsync(Service.GetVolume(ctx.Guild.Id)/100.0F);
+                    await player.SetVolumeAsync((await Service.GetVolume(ctx.Guild.Id))/100.0F);
                     await Service.ModifySettingsInternalAsync(ctx.Guild.Id,
                         (settings, _) => settings.MusicChannelId = ctx.Channel.Id, ctx.Channel.Id);
                 }
@@ -852,7 +853,7 @@ public class Music : MewdekoModuleBase<MusicService>
                 if (player.State != PlayerState.Playing)
                 {
                     await player.PlayAsync(chosen);
-                    await player.SetVolumeAsync(Service.GetVolume(ctx.Guild.Id)/ 100.0F);
+                    await player.SetVolumeAsync((await Service.GetVolume(ctx.Guild.Id))/ 100.0F);
                     await Service.ModifySettingsInternalAsync(ctx.Guild.Id,
                         (settings, _) => settings.MusicChannelId = ctx.Channel.Id, ctx.Channel.Id);
                 }
@@ -882,7 +883,7 @@ public class Music : MewdekoModuleBase<MusicService>
                 if (player.State != PlayerState.Playing)
                 {
                     await player.PlayAsync(track);
-                    await player.SetVolumeAsync(Service.GetVolume(ctx.Guild.Id)/100.0F);
+                    await player.SetVolumeAsync((await Service.GetVolume(ctx.Guild.Id))/100.0F);
                     await Service.ModifySettingsInternalAsync(ctx.Guild.Id,
                         (settings, _) => settings.MusicChannelId = ctx.Channel.Id, ctx.Channel.Id);
                 }
@@ -964,8 +965,13 @@ public class Music : MewdekoModuleBase<MusicService>
     }
 
     [MewdekoCommand, Description, Aliases, RequireContext(ContextType.Guild)]
-    public async Task Skip()
+    public async Task Skip(int num = 1)
     {
+        if (num < 1)
+        {
+            await ctx.Channel.SendErrorAsync("You can only skip ahead.");
+            return;
+        }
         var player = _lavaNode.GetPlayer<MusicPlayer>(ctx.Guild.Id);
         if (player is null)
         {
@@ -973,7 +979,7 @@ public class Music : MewdekoModuleBase<MusicService>
             return;
         }
 
-        await Service.Skip(ctx.Guild, ctx.Channel as ITextChannel, player);
+        await Service.Skip(ctx.Guild, ctx.Channel as ITextChannel, player, num: num);
     }
 
     [MewdekoCommand, Description, Aliases, RequireContext(ContextType.Guild)]
@@ -1119,7 +1125,7 @@ public class Music : MewdekoModuleBase<MusicService>
             var tracks = queue.OrderBy(x => queue.IndexOf(x)).Skip(page * 10).Take(10);
             return new PageBuilder()
                 .WithDescription(string.Join("\n", tracks.Select(x =>
-                    $"`{queue.IndexOf(x) + 1}.` [{x.Title}]({x.Source})\n`{x.Duration:mm\\\\:ss} {GetContext(x).QueueUser} {GetContext(x).QueuedPlatform}`")))
+                    $"`{queue.IndexOf(x) + 1}.` [{x.Title}]({x.Source})\n`{x.Duration:mm\\:ss} {GetContext(x).QueueUser} {GetContext(x).QueuedPlatform}`")))
                 .WithOkColor();
         }
     }

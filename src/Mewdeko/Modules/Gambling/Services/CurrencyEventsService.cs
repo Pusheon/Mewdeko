@@ -40,12 +40,17 @@ public class CurrencyEventsService : INService
 
         ICurrencyEvent ce;
 
-        if (type == CurrencyEvent.Type.Reaction)
-            ce = new ReactionEvent(_client, _cs, g, ch, opts, _configService.Data, embed);
-        else if (type == CurrencyEvent.Type.GameStatus)
-            ce = new GameStatusEvent(_client, _cs, g, ch, opts, embed);
-        else
-            return false;
+        switch (type)
+        {
+            case CurrencyEvent.Type.Reaction:
+                ce = new ReactionEvent(_client, _cs, g, ch, opts, _configService.Data, embed);
+                break;
+            case CurrencyEvent.Type.GameStatus:
+                ce = new GameStatusEvent(_client, _cs, g, ch, opts, embed);
+                break;
+            default:
+                return false;
+        }
 
         var added = _events.TryAdd(guildId, ce);
         if (added)

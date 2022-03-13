@@ -62,7 +62,18 @@ public partial class Administration : MewdekoModuleBase<AdministrationService>
         await ReplyConfirmLocalizedAsync("user_nick", Format.Bold(gu.ToString()), Format.Bold(newNick) ?? "-")
             .ConfigureAwait(false);
     }
+    
+    [MewdekoCommand, Usage, Description, Aliases, UserPerm(GuildPermission.ManageNicknames),
+     BotPerm(GuildPermission.ChangeNickname), Priority(0)]
+    public async Task SetNick([Remainder] string? newNick = null)
+    {
+        if (string.IsNullOrWhiteSpace(newNick))
+            return;
+        var curUser = await ctx.Guild.GetCurrentUserAsync().ConfigureAwait(false);
+        await curUser.ModifyAsync(u => u.Nickname = newNick).ConfigureAwait(false);
 
+        await ReplyConfirmLocalizedAsync("bot_nick", Format.Bold(newNick) ?? "-").ConfigureAwait(false);
+    }
     [MewdekoCommand, Usage, Description, Aliases, UserPerm(GuildPermission.Administrator),
      BotPerm(GuildPermission.BanMembers)]
     public async Task BanUnder(StoopidTime time, string? option = null, StoopidTime? time1 = null)

@@ -35,7 +35,7 @@ public partial class Moderation
          UserPerm(GuildPermission.Administrator)]
         public async Task RemoveOnMute(string yesnt)
         {
-            var users = ctx.Guild.GetUsersAsync().Result.Where(x => x.RoleIds.ToList().Contains(824321516468043779));
+            var users = (await ctx.Guild.GetUsersAsync()).Where(x => x.RoleIds.ToList().Contains(824321516468043779));
             if (yesnt.StartsWith("n"))
             {
                 await Service.Removeonmute(ctx.Guild, "n");
@@ -83,8 +83,8 @@ public partial class Moderation
          UserPerm(GuildPermission.Administrator)]
         public async Task UnmuteAll([Remainder] string? reason = null)
         {
-            var users = ctx.Guild.GetUsersAsync().Result
-                           .Where(x => x.RoleIds.ToList().Contains(Service.GetMuteRole(ctx.Guild).Result.Id));
+            var users = (await ctx.Guild.GetUsersAsync())
+                           .Where(x => x.RoleIds.ToList().Contains((Service.GetMuteRole(ctx.Guild).Result.Id)));
             if (!users.Any())
             {
                 await ctx.Channel.SendErrorAsync("There are no muted users or you don't have a mute role set.");

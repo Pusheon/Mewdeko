@@ -1,5 +1,4 @@
-﻿using System.Net.Http;
-using Discord;
+﻿using Discord;
 using Discord.Commands;
 using Fergun.Interactive;
 using Fergun.Interactive.Pagination;
@@ -7,11 +6,12 @@ using Mewdeko._Extensions;
 using Mewdeko.Common;
 using Mewdeko.Common.Attributes;
 using Mewdeko.Database.Extensions;
-using Mewdeko.Modules.CustomReactions.Services;
+using Mewdeko.Modules.Chat_Triggers.Services;
+using System.Net.Http;
 
-namespace Mewdeko.Modules.CustomReactions;
+namespace Mewdeko.Modules.Chat_Triggers;
 
-public class CustomReactions : MewdekoModuleBase<CustomReactionsService>
+public class ChatTriggers : MewdekoModuleBase<ChatTriggersService>
 {
     public enum All
     {
@@ -22,7 +22,7 @@ public class CustomReactions : MewdekoModuleBase<CustomReactionsService>
     private readonly IBotCredentials _creds;
     private readonly InteractiveService _interactivity;
 
-    public CustomReactions(IBotCredentials creds, IHttpClientFactory clientFactory, InteractiveService serv)
+    public ChatTriggers(IBotCredentials creds, IHttpClientFactory clientFactory, InteractiveService serv)
     {
         _interactivity = serv;
         _creds = creds;
@@ -35,7 +35,7 @@ public class CustomReactions : MewdekoModuleBase<CustomReactionsService>
 
     [MewdekoCommand, Usage, Description, Aliases, RequireContext(ContextType.Guild),
      UserPerm(GuildPermission.Administrator)]
-    public async Task CrsExport()
+    public async Task CtsExport()
     {
         if (!AdminInGuildOrOwnerInDm())
         {
@@ -52,7 +52,7 @@ public class CustomReactions : MewdekoModuleBase<CustomReactionsService>
 
     [MewdekoCommand, Usage, Description, Aliases, RequireContext(ContextType.Guild),
      UserPerm(GuildPermission.Administrator)]
-    public async Task CrsImport([Remainder] string? input = null)
+    public async Task CtsImport([Remainder] string? input = null)
     {
         if (!AdminInGuildOrOwnerInDm())
         {
@@ -94,7 +94,7 @@ public class CustomReactions : MewdekoModuleBase<CustomReactionsService>
     }
 
     [MewdekoCommand, Usage, Description, Aliases]
-    public async Task AddCustReact(string key, [Remainder] string message)
+    public async Task AddChatTrigger(string key, [Remainder] string message)
     {
         if (string.IsNullOrWhiteSpace(message) || string.IsNullOrWhiteSpace(key))
             return;
@@ -108,7 +108,7 @@ public class CustomReactions : MewdekoModuleBase<CustomReactionsService>
         var cr = await Service.AddAsync(ctx.Guild?.Id, key, message);
 
         await ctx.Channel.EmbedAsync(new EmbedBuilder().WithOkColor()
-            .WithTitle(GetText("new_cust_react"))
+            .WithTitle(GetText("new_chat_trig"))
             .WithDescription($"#{cr.Id}")
             .AddField(efb => efb.WithName(GetText("trigger")).WithValue(key))
             .AddField(efb =>
@@ -118,7 +118,7 @@ public class CustomReactions : MewdekoModuleBase<CustomReactionsService>
     }
 
     [MewdekoCommand, Usage, Description, Aliases]
-    public async Task EditCustReact(int id, [Remainder] string message)
+    public async Task EditChatTrigger(int id, [Remainder] string message)
     {
         var channel = ctx.Channel as ITextChannel;
         if (string.IsNullOrWhiteSpace(message) || id < 0)
@@ -134,7 +134,7 @@ public class CustomReactions : MewdekoModuleBase<CustomReactionsService>
         var cr = await Service.EditAsync(ctx.Guild?.Id, id, message).ConfigureAwait(false);
         if (cr != null)
             await ctx.Channel.EmbedAsync(new EmbedBuilder().WithOkColor()
-                .WithTitle(GetText("edited_cust_react"))
+                .WithTitle(GetText("edited_chat_trig"))
                 .WithDescription($"#{id}")
                 .AddField(efb => efb.WithName(GetText("trigger")).WithValue(cr.Trigger))
                 .AddField(efb =>
@@ -146,14 +146,14 @@ public class CustomReactions : MewdekoModuleBase<CustomReactionsService>
     }
 
     [MewdekoCommand, Usage, Description, Aliases, Priority(1)]
-    public async Task ListCustReact(int page = 1)
+    public async Task ListChatTriggers(int page = 1)
     {
         if (--page < 0 || page > 999)
             return;
 
-        var customReactions = Service.GetCustomReactionsFor(ctx.Guild?.Id);
+        var chatTriggers = Service.GetChatTriggersFor(ctx.Guild?.Id);
 
-        if (customReactions == null || !customReactions.Any())
+        if (chatTriggers == null || !chatTriggers.Any())
         {
             await ReplyErrorLocalizedAsync("no_found").ConfigureAwait(false);
             return;
@@ -163,7 +163,7 @@ public class CustomReactions : MewdekoModuleBase<CustomReactionsService>
             .AddUser(ctx.User)
             .WithPageFactory(PageFactory)
             .WithFooter(PaginatorFooter.PageNumber | PaginatorFooter.Users)
-            .WithMaxPageIndex(customReactions.Length / 20)
+            .WithMaxPageIndex(chatTriggers.Length / 20)
             .WithDefaultEmotes()
             .Build();
 
@@ -174,7 +174,7 @@ public class CustomReactions : MewdekoModuleBase<CustomReactionsService>
             await Task.CompletedTask;
             return new PageBuilder().WithColor(Mewdeko.OkColor).WithTitle(GetText("custom_reactions"))
                                                     .WithDescription(string.Join("\n",
-                                                        customReactions.OrderBy(cr => cr.Trigger).Skip(page * 20)
+                                                        chatTriggers.OrderBy(cr => cr.Trigger).Skip(page * 20)
                                                                        .Take(20).Select(cr =>
                                                                        {
                                                                            var str = $"`#{cr.Id}` {cr.Trigger}";
@@ -192,19 +192,19 @@ public class CustomReactions : MewdekoModuleBase<CustomReactionsService>
 
 
     [MewdekoCommand, Usage, Description, Aliases]
-    public async Task ListCustReactG(int page = 1)
+    public async Task ListChatTriggersGroup(int page = 1)
     {
         if (--page < 0 || page > 9999)
             return;
-        var customReactions = Service.GetCustomReactionsFor(ctx.Guild?.Id);
+        var chatTriggers = Service.GetChatTriggersFor(ctx.Guild?.Id);
 
-        if (customReactions == null || !customReactions.Any())
+        if (chatTriggers == null || !chatTriggers.Any())
         {
             await ReplyErrorLocalizedAsync("no_found").ConfigureAwait(false);
         }
         else
         {
-            var ordered = customReactions
+            var ordered = chatTriggers
                 .GroupBy(cr => cr.Trigger)
                 .OrderBy(cr => cr.Key)
                 .ToList();
@@ -213,7 +213,7 @@ public class CustomReactions : MewdekoModuleBase<CustomReactionsService>
                 .AddUser(ctx.User)
                 .WithPageFactory(PageFactory)
                 .WithFooter(PaginatorFooter.PageNumber | PaginatorFooter.Users)
-                .WithMaxPageIndex(customReactions.Length / 20)
+                .WithMaxPageIndex(chatTriggers.Length / 20)
                 .WithDefaultEmotes()
                 .Build();
 
@@ -231,9 +231,9 @@ public class CustomReactions : MewdekoModuleBase<CustomReactionsService>
     }
 
     [MewdekoCommand, Usage, Description, Aliases]
-    public async Task ShowCustReact(int id)
+    public async Task ShowChatTrigger(int id)
     {
-        var found = Service.GetCustomReaction(ctx.Guild?.Id, id);
+        var found = Service.GetChatTriggers(ctx.Guild?.Id, id);
 
         if (found == null)
             await ReplyErrorLocalizedAsync("no_found_id").ConfigureAwait(false);
@@ -248,7 +248,7 @@ public class CustomReactions : MewdekoModuleBase<CustomReactionsService>
     }
 
     [MewdekoCommand, Usage, Description, Aliases]
-    public async Task DelCustReact(int id)
+    public async Task DeleteChatTrigger(int id)
     {
         if (!AdminInGuildOrOwnerInDm())
         {
@@ -256,21 +256,21 @@ public class CustomReactions : MewdekoModuleBase<CustomReactionsService>
             return;
         }
 
-        var cr = await Service.DeleteAsync(ctx.Guild?.Id, id);
+        var ct = await Service.DeleteAsync(ctx.Guild?.Id, id);
 
-        if (cr != null)
+        if (ct != null)
             await ctx.Channel.EmbedAsync(new EmbedBuilder().WithOkColor()
                     .WithTitle(GetText("deleted"))
-                    .WithDescription($"#{cr.Id}")
-                    .AddField(efb => efb.WithName(GetText("trigger")).WithValue(cr.Trigger.TrimTo(1024)))
-                    .AddField(efb => efb.WithName(GetText("response")).WithValue(cr.Response.TrimTo(1024))))
+                    .WithDescription($"#{ct.Id}")
+                    .AddField(efb => efb.WithName(GetText("trigger")).WithValue(ct.Trigger.TrimTo(1024)))
+                    .AddField(efb => efb.WithName(GetText("response")).WithValue(ct.Response.TrimTo(1024))))
                 .ConfigureAwait(false);
         else
             await ReplyErrorLocalizedAsync("no_found_id").ConfigureAwait(false);
     }
 
     [MewdekoCommand, Usage, Description, Aliases]
-    public async Task CrReact(int id, params string[] emojiStrs)
+    public async Task CtReact(int id, params string[] emojiStrs)
     {
         if (!AdminInGuildOrOwnerInDm())
         {
@@ -278,7 +278,7 @@ public class CustomReactions : MewdekoModuleBase<CustomReactionsService>
             return;
         }
 
-        var cr = Service.GetCustomReaction(Context.Guild?.Id, id);
+        var cr = Service.GetChatTriggers(Context.Guild?.Id, id);
         if (cr is null)
         {
             await ReplyErrorLocalizedAsync("no_found").ConfigureAwait(false);
@@ -288,7 +288,7 @@ public class CustomReactions : MewdekoModuleBase<CustomReactionsService>
         if (emojiStrs.Length == 0)
         {
             await Service.ResetCrReactions(ctx.Guild?.Id, id);
-            await ReplyConfirmLocalizedAsync("crr_reset", Format.Bold(id.ToString())).ConfigureAwait(false);
+            await ReplyConfirmLocalizedAsync("ctr_reset", Format.Bold(id.ToString())).ConfigureAwait(false);
             return;
         }
 
@@ -309,6 +309,7 @@ public class CustomReactions : MewdekoModuleBase<CustomReactionsService>
             }
             catch
             {
+                // ignored
             }
         }
 
@@ -326,33 +327,33 @@ public class CustomReactions : MewdekoModuleBase<CustomReactionsService>
     }
 
     [MewdekoCommand, Usage, Description, Aliases]
-    public Task CrCa(int id) => InternalCrEdit(id, CustomReactionsService.CrField.ContainsAnywhere);
+    public Task CtCa(int id) => InternalCtEdit(id, ChatTriggersService.CtField.ContainsAnywhere);
 
     [MewdekoCommand, Usage, Description, Aliases]
-    public Task Rtt(int id) => InternalCrEdit(id, CustomReactionsService.CrField.ReactToTrigger);
+    public Task Rtt(int id) => InternalCtEdit(id, ChatTriggersService.CtField.ReactToTrigger);
 
     [MewdekoCommand, Usage, Description, Aliases]
-    public Task CrDm(int id) => InternalCrEdit(id, CustomReactionsService.CrField.DmResponse);
+    public Task CtDm(int id) => InternalCtEdit(id, ChatTriggersService.CtField.DmResponse);
 
     [MewdekoCommand, Usage, Description, Aliases]
-    public Task CrAd(int id) => InternalCrEdit(id, CustomReactionsService.CrField.AutoDelete);
+    public Task CtAd(int id) => InternalCtEdit(id, ChatTriggersService.CtField.AutoDelete);
 
     [MewdekoCommand, Usage, Description, Aliases]
-    public Task CrAt(int id) => InternalCrEdit(id, CustomReactionsService.CrField.AllowTarget);
+    public Task CtAt(int id) => InternalCtEdit(id, ChatTriggersService.CtField.AllowTarget);
 
     [MewdekoCommand, Usage, Description, Aliases]
-    public Task CrNr(int id) => InternalCrEdit(id, CustomReactionsService.CrField.NoRespond);
+    public Task CtNr(int id) => InternalCtEdit(id, ChatTriggersService.CtField.NoRespond);
 
 
     [MewdekoCommand, Usage, Description, Aliases, OwnerOnly]
-    public async Task CrsReload()
+    public async Task CtsReload()
     {
-        await Service.TriggerReloadCustomReactions();
+        await Service.TriggerReloadChatTriggers();
 
         await ctx.OkAsync();
     }
 
-    private async Task InternalCrEdit(int id, CustomReactionsService.CrField option)
+    private async Task InternalCtEdit(int id, ChatTriggersService.CtField option)
     {
         if (!AdminInGuildOrOwnerInDm())
         {
@@ -377,14 +378,14 @@ public class CustomReactions : MewdekoModuleBase<CustomReactionsService>
 
     [MewdekoCommand, Usage, Description, Aliases, RequireContext(ContextType.Guild),
      UserPerm(GuildPermission.Administrator)]
-    public async Task CrClear()
+    public async Task CtsClear()
     {
         if (await PromptUserConfirmAsync(new EmbedBuilder()
-                    .WithTitle("Custom reaction clear")
-                    .WithDescription("This will delete all custom reactions on this server."), ctx.User.Id)
+                    .WithTitle("Chat triggers clear")
+                    .WithDescription("This will delete all chat triggers on this server."), ctx.User.Id)
                 .ConfigureAwait(false))
         {
-            var count = Service.DeleteAllCustomReactions(ctx.Guild.Id);
+            var count = Service.DeleteAllChatTriggers(ctx.Guild.Id);
             await ReplyConfirmLocalizedAsync("cleared", count).ConfigureAwait(false);
         }
     }

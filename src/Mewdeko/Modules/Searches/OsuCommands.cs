@@ -196,36 +196,35 @@ public partial class Searches
         {
             double hitPoints;
             double totalHits;
-            if (mode == 0)
+            switch (mode)
             {
-                hitPoints = (play.Count50 * 50) +
-                            (play.Count100 * 100) +
-                            (play.Count300 * 300);
-                totalHits = play.Count50 + play.Count100 +
-                            play.Count300 + play.Countmiss;
-                totalHits *= 300;
-            }
-            else if (mode == 1)
-            {
-                hitPoints = (play.Countmiss * 0) + (play.Count100 * 0.5) + play.Count300;
-                totalHits = (play.Countmiss + play.Count100 + play.Count300) * 300;
-                hitPoints *= 300;
-            }
-            else if (mode == 2)
-            {
-                hitPoints = play.Count50 + play.Count100 + play.Count300;
-                totalHits = play.Countmiss + play.Count50 + play.Count100 + play.Count300 +
-                            play.Countkatu;
-            }
-            else
-            {
-                hitPoints = (play.Count50 * 50) +
-                            (play.Count100 * 100) +
-                            (play.Countkatu * 200) +
-                            ((play.Count300 + play.Countgeki) * 300);
+                case 0:
+                    hitPoints = (play.Count50 * 50) +
+                                (play.Count100 * 100) +
+                                (play.Count300 * 300);
+                    totalHits = play.Count50 + play.Count100 +
+                                play.Count300 + play.Countmiss;
+                    totalHits *= 300;
+                    break;
+                case 1:
+                    hitPoints = (play.Countmiss * 0) + (play.Count100 * 0.5) + play.Count300;
+                    totalHits = (play.Countmiss + play.Count100 + play.Count300) * 300;
+                    hitPoints *= 300;
+                    break;
+                case 2:
+                    hitPoints = play.Count50 + play.Count100 + play.Count300;
+                    totalHits = play.Countmiss + play.Count50 + play.Count100 + play.Count300 +
+                                play.Countkatu;
+                    break;
+                default:
+                    hitPoints = (play.Count50 * 50) +
+                                (play.Count100 * 100) +
+                                (play.Countkatu * 200) +
+                                ((play.Count300 + play.Countgeki) * 300);
 
-                totalHits = (play.Countmiss + play.Count50 + play.Count100 +
-                             play.Countkatu + play.Count300 + play.Countgeki) * 300;
+                    totalHits = (play.Countmiss + play.Count50 + play.Count100 +
+                                 play.Countkatu + play.Count300 + play.Countgeki) * 300;
+                    break;
             }
 
 

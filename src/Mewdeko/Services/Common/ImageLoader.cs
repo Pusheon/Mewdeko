@@ -102,22 +102,24 @@ public class ImageLoader
         Task t;
         // go through all of the kvps in the object
         foreach (var kvp in obj)
-            // if it's a JArray, resole it using jarray method which will
-            // return task<byte[][]> aka an array of all images' bytes
-            if (kvp.Value.Type == JTokenType.Array)
+            switch (kvp.Value.Type)
             {
-                t = HandleJArray((JArray) kvp.Value, GetParentString() + kvp.Key);
-                tasks.Add(t);
-            }
-            else if (kvp.Value.Type == JTokenType.String)
-            {
-                var uriTask = HandleUri((Uri) kvp.Value, GetParentString() + kvp.Key);
-                _uriTasks.Add(uriTask);
-            }
-            else if (kvp.Value.Type == JTokenType.Object)
-            {
-                t = HandleJObject((JObject) kvp.Value, GetParentString() + kvp.Key);
-                tasks.Add(t);
+                // if it's a JArray, resole it using jarray method which will
+                // return task<byte[][]> aka an array of all images' bytes
+                case JTokenType.Array:
+                    t = HandleJArray((JArray) kvp.Value, GetParentString() + kvp.Key);
+                    tasks.Add(t);
+                    break;
+                case JTokenType.String:
+                    {
+                        var uriTask = HandleUri((Uri) kvp.Value, GetParentString() + kvp.Key);
+                        _uriTasks.Add(uriTask);
+                        break;
+                    }
+                case JTokenType.Object:
+                    t = HandleJObject((JObject) kvp.Value, GetParentString() + kvp.Key);
+                    tasks.Add(t);
+                    break;
             }
 
         return Task.WhenAll(tasks);

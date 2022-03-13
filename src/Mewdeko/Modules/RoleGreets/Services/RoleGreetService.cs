@@ -73,6 +73,8 @@ public class RoleGreetService : INService
                 continue;
             if (!i.GreetBots && user.IsBot)
                 continue;
+            if (i.WebhookUrl != null)
+                continue;
             var channel = user.Guild.GetTextChannel(i.ChannelId);
             var content = replacer.Replace(i.Message);
             if (SmartEmbed.TryParse(content, out var embedData, out var plainText))
@@ -115,6 +117,8 @@ public class RoleGreetService : INService
         var replacer = new ReplacementBuilder().WithUser(user).WithClient(_client).WithServer(_client, user.Guild).Build();
         foreach (var i in checkGreets)
         {
+            if (i.WebhookUrl == null)
+                continue;
             if (i.Disabled)
                 continue;
             if (!i.GreetBots && user.IsBot)
@@ -128,28 +132,28 @@ public class RoleGreetService : INService
                 {
                     var msg = await webhook.SendMessageAsync(plainText, embeds: new[] { embedData.Build() });
                     if (i.DeleteTime > 0)
-                        user.Guild.GetTextChannel(i.ChannelId).GetMessageAsync(msg).Result.DeleteAfter(int.Parse(i.DeleteTime.ToString()));
+                        (await user.Guild.GetTextChannel(i.ChannelId).GetMessageAsync(msg)).DeleteAfter(int.Parse(i.DeleteTime.ToString()));
                 }
 
                 if (embedData is null && plainText is not null)
                 {
                     var msg = await webhook.SendMessageAsync(plainText);
                     if (i.DeleteTime > 0)
-                        user.Guild.GetTextChannel(i.ChannelId).GetMessageAsync(msg).Result.DeleteAfter(int.Parse(i.DeleteTime.ToString()));
+                        (await user.Guild.GetTextChannel(i.ChannelId).GetMessageAsync(msg)).DeleteAfter(int.Parse(i.DeleteTime.ToString()));
                 }
 
                 if (embedData is not null && plainText is "")
                 {
                     var msg = await webhook.SendMessageAsync(embeds: new[] { embedData.Build() });
                     if (i.DeleteTime > 0)
-                        user.Guild.GetTextChannel(i.ChannelId).GetMessageAsync(msg).Result.DeleteAfter(int.Parse(i.DeleteTime.ToString()));
+                        (await user.Guild.GetTextChannel(i.ChannelId).GetMessageAsync(msg)).DeleteAfter(int.Parse(i.DeleteTime.ToString()));
                 }
             }
             else
             {
                 var msg = await webhook.SendMessageAsync(content);
                 if (i.DeleteTime > 0)
-                    user.Guild.GetTextChannel(i.ChannelId).GetMessageAsync(msg).Result.DeleteAfter(int.Parse(i.DeleteTime.ToString()));
+                    (await user.Guild.GetTextChannel(i.ChannelId).GetMessageAsync(msg)).DeleteAfter(int.Parse(i.DeleteTime.ToString()));
             }
         }
     }

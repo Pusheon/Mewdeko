@@ -1,6 +1,4 @@
-﻿using System.Collections.Concurrent;
-using System.Runtime.CompilerServices;
-using Discord;
+﻿using Discord;
 using Discord.WebSocket;
 using Mewdeko._Extensions;
 using Mewdeko.Common;
@@ -10,22 +8,23 @@ using Mewdeko.Common.Yml;
 using Mewdeko.Database;
 using Mewdeko.Database.Extensions;
 using Mewdeko.Database.Models;
-using Mewdeko.Modules.CustomReactions.Common;
-using Mewdeko.Modules.CustomReactions.Extensions;
+using Mewdeko.Modules.Chat_Triggers.Common;
+using Mewdeko.Modules.Chat_Triggers.Extensions;
 using Mewdeko.Modules.Permissions.Common;
 using Mewdeko.Modules.Permissions.Services;
 using Mewdeko.Services.strings;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
-using CustomReaction = Mewdeko.Database.Models.CustomReaction;
 
-namespace Mewdeko.Modules.CustomReactions.Services;
+namespace Mewdeko.Modules.Chat_Triggers.Services;
 
-public sealed class CustomReactionsService : IEarlyBehavior, INService, IReadyExecutor
+public sealed class ChatTriggersService : IEarlyBehavior, INService, IReadyExecutor
 {
-    public enum CrField
+    public enum CtField
     {
         AutoDelete,
         DmResponse,
@@ -69,9 +68,9 @@ public sealed class CustomReactionsService : IEarlyBehavior, INService, IReadyEx
 
     private readonly DbService _db;
 
-    private readonly TypedKey<CustomReaction> _gcrAddedKey = new("gcr.added");
+    private readonly TypedKey<Database.Models.ChatTriggers> _gcrAddedKey = new("gcr.added");
     private readonly TypedKey<int> _gcrDeletedkey = new("gcr.deleted");
-    private readonly TypedKey<CustomReaction> _gcrEditedKey = new("gcr.edited");
+    private readonly TypedKey<Database.Models.ChatTriggers> _gcrEditedKey = new("gcr.edited");
 
     private readonly object _gcrWriteLock = new();
     private readonly GlobalPermissionService _gperm;
@@ -84,12 +83,12 @@ public sealed class CustomReactionsService : IEarlyBehavior, INService, IReadyEx
     // 1. custom reactions are almost never added (compared to how many times they are being looped through)
     // 2. only need write locks for this as we'll rebuild+replace the array on every edit
     // 3. there's never many of them (at most a thousand, usually < 100)
-    private CustomReaction[] globalReactions;
-    private ConcurrentDictionary<ulong, CustomReaction[]> newGuildReactions;
+    private Database.Models.ChatTriggers[] globalReactions;
+    private ConcurrentDictionary<ulong, Database.Models.ChatTriggers[]> newGuildReactions;
 
     private bool ready;
 
-    public CustomReactionsService(PermissionService perms, DbService db, IBotStrings strings,
+    public ChatTriggersService(PermissionService perms, DbService db, IBotStrings strings,
         Mewdeko bot,
         DiscordSocketClient client, CommandHandler cmd, GlobalPermissionService gperm, CmdCdService cmdCds,
         IPubSub pubSub)
@@ -121,7 +120,7 @@ public sealed class CustomReactionsService : IEarlyBehavior, INService, IReadyEx
     public async Task<bool> RunBehavior(DiscordSocketClient client, IGuild guild, IUserMessage msg)
     {
         // maybe this message is a custom reaction
-        var cr = TryGetCustomReaction(msg);
+        var cr = TryGetChatTriggers(msg);
 
         if (cr is null)
             return false;
@@ -131,12 +130,12 @@ public sealed class CustomReactionsService : IEarlyBehavior, INService, IReadyEx
 
         try
         {
-            if (_gperm.BlockedModules.Contains("ActualCustomReactions")) return true;
+            if (_gperm.BlockedModules.Contains("ActualChatTriggers")) return true;
 
             if (guild is SocketGuild sg)
             {
                 var pc = _perms.GetCacheFor(guild.Id);
-                if (!pc.Permissions.CheckPermissions(msg, cr.Trigger, "ActualCustomReactions",
+                if (!pc.Permissions.CheckPermissions(msg, cr.Trigger, "ActualChatTriggers",
                         out var index))
                 {
                     if (pc.Verbose)
@@ -205,11 +204,11 @@ public sealed class CustomReactionsService : IEarlyBehavior, INService, IReadyEx
 
     public string ExportCrs(ulong? guildId)
     {
-        var crs = GetCustomReactionsFor(guildId);
+        var crs = GetChatTriggersFor(guildId);
 
         var crsDict = crs
             .GroupBy(x => x.Trigger)
-            .ToDictionary(x => x.Key, x => x.Select(ExportedExpr.FromModel));
+            .ToDictionary(x => x.Key, x => x.Select(ExportedTriggers.FromModel));
 
         return PREPEND_EXPORT + _exportSerializer
             .Serialize(crsDict)
@@ -218,10 +217,10 @@ public sealed class CustomReactionsService : IEarlyBehavior, INService, IReadyEx
 
     public async Task<bool> ImportCrsAsync(ulong? guildId, string input)
     {
-        Dictionary<string, List<ExportedExpr>> data;
+        Dictionary<string, List<ExportedTriggers>> data;
         try
         {
-            data = Yaml.Deserializer.Deserialize<Dictionary<string, List<ExportedExpr>>>(input);
+            data = Yaml.Deserializer.Deserialize<Dictionary<string, List<ExportedTriggers>>>(input);
             if (data.Sum(x => x.Value.Count) == 0)
                 return false;
         }
@@ -233,31 +232,31 @@ public sealed class CustomReactionsService : IEarlyBehavior, INService, IReadyEx
         await using var uow = _db.GetDbContext();
         foreach (var (trigger, value) in data)
         {
-            await uow.CustomReactions.AddRangeAsync(value
-                                                             .Where(cr => !string.IsNullOrWhiteSpace(cr.Res))
-                                                             .Select(cr => new CustomReaction
+            await uow.ChatTriggers.AddRangeAsync(value
+                                                             .Where(ct => !string.IsNullOrWhiteSpace(ct.Res))
+                                                             .Select(ct => new Database.Models.ChatTriggers
                                                              {
                                                                  GuildId = guildId,
-                                                                 Response = cr.Res,
-                                                                 Reactions = cr.React?.JoinWith("@@@"),
+                                                                 Response = ct.Res,
+                                                                 Reactions = ct.React?.JoinWith("@@@"),
                                                                  Trigger = trigger,
-                                                                 AllowTarget = cr.At,
-                                                                 ContainsAnywhere = cr.Ca,
-                                                                 DmResponse = cr.Dm,
-                                                                 AutoDeleteTrigger = cr.Ad,
-                                                                 NoRespond = cr.Nr
+                                                                 AllowTarget = ct.At,
+                                                                 ContainsAnywhere = ct.Ca,
+                                                                 DmResponse = ct.Dm,
+                                                                 AutoDeleteTrigger = ct.Ad,
+                                                                 NoRespond = ct.Nr
                                                              }));
         }
 
         await uow.SaveChangesAsync();
-        await TriggerReloadCustomReactions();
+        await TriggerReloadChatTriggers();
         return true;
     }
 
     private async Task ReloadInternal(IReadOnlyList<ulong> allGuildIds)
     {
         await using var uow = _db.GetDbContext();
-        var guildItems = await uow.CustomReactions
+        var guildItems = await uow.ChatTriggers
             .AsNoTracking()
             .Where(x => allGuildIds.Contains(x.GuildId.Value))
             .ToListAsync();
@@ -275,7 +274,7 @@ public sealed class CustomReactionsService : IEarlyBehavior, INService, IReadyEx
         lock (_gcrWriteLock)
         {
             var globalItems = 
-                uow.CustomReactions
+                uow.ChatTriggers
                 .AsNoTracking()
                 .Where(x => x.GuildId == null || x.GuildId == 0)
                 .AsEnumerable()
@@ -292,7 +291,7 @@ public sealed class CustomReactionsService : IEarlyBehavior, INService, IReadyEx
         ready = true;
     }
 
-    private CustomReaction TryGetCustomReaction(IUserMessage umsg)
+    private Database.Models.ChatTriggers TryGetChatTriggers(IUserMessage umsg)
     {
         if (!ready)
             return null;
@@ -304,20 +303,20 @@ public sealed class CustomReactionsService : IEarlyBehavior, INService, IReadyEx
 
         if (newGuildReactions.TryGetValue(channel.Guild.Id, out var reactions) && reactions.Length > 0)
         {
-            var cr = MatchCustomReactions(content, reactions);
+            var cr = MatchChatTriggerss(content, reactions);
             if (cr is not null)
                 return cr;
         }
 
         var localGrs = globalReactions;
 
-        return MatchCustomReactions(content, localGrs);
+        return MatchChatTriggerss(content, localGrs);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private CustomReaction MatchCustomReactions(in ReadOnlySpan<char> content, CustomReaction[] crs)
+    private Database.Models.ChatTriggers MatchChatTriggerss(in ReadOnlySpan<char> content, Database.Models.ChatTriggers[] crs)
     {
-        var result = new List<CustomReaction>(1);
+        var result = new List<Database.Models.ChatTriggers>(1);
         for (var i = 0; i < crs.Length; i++)
         {
             var cr = crs[i];
@@ -367,9 +366,9 @@ public sealed class CustomReactionsService : IEarlyBehavior, INService, IReadyEx
 
     public async Task ResetCrReactions(ulong? maybeGuildId, int id)
     {
-        CustomReaction cr;
+        Database.Models.ChatTriggers cr;
         await using var uow = _db.GetDbContext();
-        cr = uow.CustomReactions.GetById(id);
+        cr = uow.ChatTriggers.GetById(id);
         if (cr is null)
             return;
 
@@ -378,9 +377,9 @@ public sealed class CustomReactionsService : IEarlyBehavior, INService, IReadyEx
         await uow.SaveChangesAsync();
     }
 
-    private Task UpdateInternalAsync(ulong? maybeGuildId, CustomReaction cr)
+    private Task UpdateInternalAsync(ulong? maybeGuildId, Database.Models.ChatTriggers cr)
     {
-        if (maybeGuildId is ulong guildId)
+        if (maybeGuildId is { } guildId)
             UpdateInternal(guildId, cr);
         else
             return _pubSub.Pub(_gcrEditedKey, cr);
@@ -388,7 +387,7 @@ public sealed class CustomReactionsService : IEarlyBehavior, INService, IReadyEx
         return Task.CompletedTask;
     }
 
-    private void UpdateInternal(ulong? maybeGuildId, CustomReaction cr)
+    private void UpdateInternal(ulong? maybeGuildId, Database.Models.ChatTriggers cr)
     {
         if (maybeGuildId is ulong guildId)
             newGuildReactions.AddOrUpdate(guildId, new[] {cr},
@@ -410,7 +409,7 @@ public sealed class CustomReactionsService : IEarlyBehavior, INService, IReadyEx
             }
     }
 
-    private Task AddInternalAsync(ulong? maybeGuildId, CustomReaction cr)
+    private Task AddInternalAsync(ulong? maybeGuildId, Database.Models.ChatTriggers cr)
     {
         // only do this for perf purposes
         cr.Trigger = cr.Trigger.Replace(MENTION_PH, _client.CurrentUser.Mention);
@@ -430,7 +429,7 @@ public sealed class CustomReactionsService : IEarlyBehavior, INService, IReadyEx
         if (maybeGuildId is ulong guildId)
         {
             newGuildReactions.AddOrUpdate(guildId,
-                Array.Empty<CustomReaction>(),
+                Array.Empty<Database.Models.ChatTriggers>(),
                 (key, old) => DeleteInternal(old, id, out _));
 
             return Task.CompletedTask;
@@ -445,13 +444,13 @@ public sealed class CustomReactionsService : IEarlyBehavior, INService, IReadyEx
         return Task.CompletedTask;
     }
 
-    private static CustomReaction[] DeleteInternal(IReadOnlyList<CustomReaction>? crs, int id, out CustomReaction deleted)
+    private static Database.Models.ChatTriggers[] DeleteInternal(IReadOnlyList<Database.Models.ChatTriggers>? crs, int id, out Database.Models.ChatTriggers deleted)
     {
         deleted = null;
         if (crs is null || crs.Count == 0)
-            return crs as CustomReaction[] ?? crs?.ToArray();
+            return crs as Database.Models.ChatTriggers[] ?? crs?.ToArray();
 
-        var newCrs = new CustomReaction[crs.Count - 1];
+        var newCrs = new Database.Models.ChatTriggers[crs.Count - 1];
         for (int i = 0, k = 0; i < crs.Count; i++, k++)
         {
             if (crs[i].Id == id)
@@ -469,10 +468,10 @@ public sealed class CustomReactionsService : IEarlyBehavior, INService, IReadyEx
 
     public async Task SetCrReactions(ulong? guildId, int id, IEnumerable<string> emojis)
     {
-        CustomReaction cr;
+        Database.Models.ChatTriggers cr;
         await using (var uow = _db.GetDbContext())
         {
-            cr = uow.CustomReactions.GetById(id);
+            cr = uow.ChatTriggers.GetById(id);
             if (cr is null)
                 return;
 
@@ -484,48 +483,48 @@ public sealed class CustomReactionsService : IEarlyBehavior, INService, IReadyEx
         await UpdateInternalAsync(guildId, cr);
     }
 
-    public async Task<(bool Sucess, bool NewValue)> ToggleCrOptionAsync(int id, CrField field)
+    public async Task<(bool Sucess, bool NewValue)> ToggleCrOptionAsync(int id, CtField field)
     {
         var newVal = false;
-        CustomReaction cr;
+        Database.Models.ChatTriggers ct;
         await using (var uow = _db.GetDbContext())
         {
-            cr = uow.CustomReactions.GetById(id);
-            if (cr is null)
+            ct = uow.ChatTriggers.GetById(id);
+            if (ct is null)
                 return (false, false);
             newVal = field switch
             {
-                CrField.AutoDelete => cr.AutoDeleteTrigger = !cr.AutoDeleteTrigger,
-                CrField.ContainsAnywhere => cr.ContainsAnywhere = !cr.ContainsAnywhere,
-                CrField.DmResponse => cr.DmResponse = !cr.DmResponse,
-                CrField.AllowTarget => cr.AllowTarget = !cr.AllowTarget,
-                CrField.ReactToTrigger => cr.ReactToTrigger = !cr.ReactToTrigger,
-                CrField.NoRespond => cr.NoRespond = !cr.NoRespond,
+                CtField.AutoDelete => ct.AutoDeleteTrigger = !ct.AutoDeleteTrigger,
+                CtField.ContainsAnywhere => ct.ContainsAnywhere = !ct.ContainsAnywhere,
+                CtField.DmResponse => ct.DmResponse = !ct.DmResponse,
+                CtField.AllowTarget => ct.AllowTarget = !ct.AllowTarget,
+                CtField.ReactToTrigger => ct.ReactToTrigger = !ct.ReactToTrigger,
+                CtField.NoRespond => ct.NoRespond = !ct.NoRespond,
                 _ => newVal
             };
 
             await uow.SaveChangesAsync();
         }
 
-        await UpdateInternalAsync(cr.GuildId, cr);
+        await UpdateInternalAsync(ct.GuildId, ct);
 
         return (true, newVal);
     }
 
-    public CustomReaction GetCustomReaction(ulong? guildId, int id)
+    public Database.Models.ChatTriggers GetChatTriggers(ulong? guildId, int id)
     {
         using var uow = _db.GetDbContext();
-        var cr = uow.CustomReactions.GetById(id);
+        var cr = uow.ChatTriggers.GetById(id);
         if (cr == null || cr.GuildId != guildId)
             return null;
 
         return cr;
     }
 
-    public int DeleteAllCustomReactions(ulong guildId)
+    public int DeleteAllChatTriggers(ulong guildId)
     {
         using var uow = _db.GetDbContext();
-        var count = uow.CustomReactions.ClearFromGuild(guildId);
+        var count = uow.ChatTriggers.ClearFromGuild(guildId);
         uow.SaveChanges();
 
         newGuildReactions.TryRemove(guildId, out _);
@@ -536,21 +535,19 @@ public sealed class CustomReactionsService : IEarlyBehavior, INService, IReadyEx
     public bool ReactionExists(ulong? guildId, string input)
     {
         using var uow = _db.GetDbContext();
-        var cr = uow.CustomReactions.GetByGuildIdAndInput(guildId, input);
+        var cr = uow.ChatTriggers.GetByGuildIdAndInput(guildId, input);
         return cr != null;
     }
-
-    #region Event Handlers
 
     public Task OnReadyAsync() => ReloadInternal(_bot.GetCurrentGuildIds());
 
     private ValueTask OnCrsShouldReload(bool _) => new(ReloadInternal(_bot.GetCurrentGuildIds()));
 
-    private ValueTask OnGcrAdded(CustomReaction c)
+    private ValueTask OnGcrAdded(Database.Models.ChatTriggers c)
     {
         lock (_gcrWriteLock)
         {
-            var newGlobalReactions = new CustomReaction[globalReactions.Length + 1];
+            var newGlobalReactions = new Database.Models.ChatTriggers[globalReactions.Length + 1];
             Array.Copy(globalReactions, newGlobalReactions, globalReactions.Length);
             newGlobalReactions[globalReactions.Length] = c;
             globalReactions = newGlobalReactions;
@@ -559,7 +556,7 @@ public sealed class CustomReactionsService : IEarlyBehavior, INService, IReadyEx
         return default;
     }
 
-    private ValueTask OnGcrEdited(CustomReaction c)
+    private ValueTask OnGcrEdited(Database.Models.ChatTriggers c)
     {
         lock (_gcrWriteLock)
         {
@@ -589,11 +586,7 @@ public sealed class CustomReactionsService : IEarlyBehavior, INService, IReadyEx
         return default;
     }
 
-    public Task TriggerReloadCustomReactions() => _pubSub.Pub(_crsReloadedKey, true);
-
-    #endregion
-
-    #region Client Event Handlers
+    public Task TriggerReloadChatTriggers() => _pubSub.Pub(_crsReloadedKey, true);
 
     private Task OnLeftGuild(SocketGuild arg)
     {
@@ -607,22 +600,19 @@ public sealed class CustomReactionsService : IEarlyBehavior, INService, IReadyEx
         await using var uow = _db.GetDbContext();
         var crs = await 
             uow
-            .CustomReactions
+            .ChatTriggers
             .AsNoTracking()
             .Where(x => x.GuildId == gc.GuildId)
             .ToArrayAsync();
 
         newGuildReactions[gc.GuildId] = crs;
     }
+    
 
-    #endregion
-
-    #region Basic Operations
-
-    public async Task<CustomReaction> AddAsync(ulong? guildId, string key, string message)
+    public async Task<Database.Models.ChatTriggers> AddAsync(ulong? guildId, string key, string message)
     {
         key = key.ToLowerInvariant();
-        var cr = new CustomReaction
+        var cr = new Database.Models.ChatTriggers
         {
             GuildId = guildId,
             Trigger = key,
@@ -634,7 +624,7 @@ public sealed class CustomReactionsService : IEarlyBehavior, INService, IReadyEx
 
         await using (var uow = _db.GetDbContext())
         {
-            uow.CustomReactions.Add(cr);
+            uow.ChatTriggers.Add(cr);
             await uow.SaveChangesAsync();
         }
 
@@ -643,10 +633,10 @@ public sealed class CustomReactionsService : IEarlyBehavior, INService, IReadyEx
         return cr;
     }
 
-    public async Task<CustomReaction> EditAsync(ulong? guildId, int id, string message)
+    public async Task<Database.Models.ChatTriggers> EditAsync(ulong? guildId, int id, string message)
     {
         await using var uow = _db.GetDbContext();
-        var cr = uow.CustomReactions.GetById(id);
+        var cr = uow.ChatTriggers.GetById(id);
 
         if (cr == null || cr.GuildId != guildId)
             return null;
@@ -669,17 +659,17 @@ public sealed class CustomReactionsService : IEarlyBehavior, INService, IReadyEx
     }
 
 
-    public async Task<CustomReaction> DeleteAsync(ulong? guildId, int id)
+    public async Task<Database.Models.ChatTriggers> DeleteAsync(ulong? guildId, int id)
     {
         await using var uow = _db.GetDbContext();
-        var toDelete = uow.CustomReactions.GetById(id);
+        var toDelete = uow.ChatTriggers.GetById(id);
 
         if (toDelete is null)
             return null;
 
         if ((toDelete.IsGlobal() && guildId == null) || guildId == toDelete.GuildId)
         {
-            uow.CustomReactions.Remove(toDelete);
+            uow.ChatTriggers.Remove(toDelete);
             await uow.SaveChangesAsync();
             await DeleteInternalAsync(guildId, id);
             return toDelete;
@@ -689,15 +679,12 @@ public sealed class CustomReactionsService : IEarlyBehavior, INService, IReadyEx
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public CustomReaction[] GetCustomReactionsFor(ulong? maybeGuildId)
+    public Database.Models.ChatTriggers[] GetChatTriggersFor(ulong? maybeGuildId)
     {
-        if (maybeGuildId is ulong guildId)
+        if (maybeGuildId is { } guildId)
             return newGuildReactions.TryGetValue(guildId, out var crs)
                 ? crs
-                : Array.Empty<CustomReaction>();
-
-        return globalReactions;
+                : Array.Empty<Database.Models.ChatTriggers>();
+        return Array.Empty<Database.Models.ChatTriggers>();
     }
-
-    #endregion
 }

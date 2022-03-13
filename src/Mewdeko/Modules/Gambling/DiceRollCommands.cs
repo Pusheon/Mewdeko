@@ -177,18 +177,20 @@ public partial class Gambling
 
         private Image<Rgba32> GetDice(int num)
         {
-            if (num is < 0 or > 10)
-                throw new ArgumentOutOfRangeException(nameof(num));
-
-            if (num == 10)
+            switch (num)
             {
-                var images = _images.Dice;
-                using var imgOne = Image.Load(images[1]);
-                using var imgZero = Image.Load(images[0]);
-                return new[] {imgOne, imgZero}.Merge();
+                case < 0 or > 10:
+                    throw new ArgumentOutOfRangeException(nameof(num));
+                case 10:
+                    {
+                        var images = _images.Dice;
+                        using var imgOne = Image.Load(images[1]);
+                        using var imgZero = Image.Load(images[0]);
+                        return new[] {imgOne, imgZero}.Merge();
+                    }
+                default:
+                    return Image.Load(_images.Dice[num]);
             }
-
-            return Image.Load(_images.Dice[num]);
         }
     }
 }

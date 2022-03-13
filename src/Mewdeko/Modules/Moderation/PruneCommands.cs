@@ -129,11 +129,14 @@ public partial class Moderation
             if (userId == ctx.User.Id)
                 count++;
 
-            if (count < 1)
-                return;
-
-            if (count > 1000)
-                count = 1000;
+            switch (count)
+            {
+                case < 1:
+                    return;
+                case > 1000:
+                    count = 1000;
+                    break;
+            }
 
             if (parameter is "-s" or "--safe")
                 await Service.PurgeWhere((ITextChannel) ctx.Channel, count,

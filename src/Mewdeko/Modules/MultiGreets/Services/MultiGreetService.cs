@@ -62,6 +62,8 @@ public class MultiGreetService : INService
         var replacer = new ReplacementBuilder().WithUser(user).WithClient(client).WithServer(client, user.Guild).Build();
         if (greet.WebhookUrl is not null)
         {
+            if (user.IsBot && !greet.GreetBots)
+                return;
             var webhook = new DiscordWebhookClient(greet.WebhookUrl);
             var content = replacer.Replace(greet.Message);
             if (SmartEmbed.TryParse(content, out var embedData, out var plainText))
@@ -70,32 +72,34 @@ public class MultiGreetService : INService
                 {
                     var msg = await webhook.SendMessageAsync(plainText, embeds: new[] { embedData.Build() });
                     if (greet.DeleteTime > 0)
-                        user.Guild.GetTextChannel(greet.ChannelId).GetMessageAsync(msg).Result.DeleteAfter(int.Parse(greet.DeleteTime.ToString()));
+                        (await user.Guild.GetTextChannel(greet.ChannelId).GetMessageAsync(msg)).DeleteAfter(int.Parse(greet.DeleteTime.ToString()));
                 }
 
                 if (embedData is null && plainText is not null)
                 {
                     var msg = await webhook.SendMessageAsync(plainText);
                     if (greet.DeleteTime > 0)
-                        user.Guild.GetTextChannel(greet.ChannelId).GetMessageAsync(msg).Result.DeleteAfter(int.Parse(greet.DeleteTime.ToString()));
+                        (await user.Guild.GetTextChannel(greet.ChannelId).GetMessageAsync(msg)).DeleteAfter(int.Parse(greet.DeleteTime.ToString()));
                 }
 
                 if (embedData is not null && plainText is "")
                 {
                     var msg = await webhook.SendMessageAsync(embeds: new[] { embedData.Build() });
                     if (greet.DeleteTime > 0)
-                        user.Guild.GetTextChannel(greet.ChannelId).GetMessageAsync(msg).Result.DeleteAfter(int.Parse(greet.DeleteTime.ToString()));
+                        (await user.Guild.GetTextChannel(greet.ChannelId).GetMessageAsync(msg)).DeleteAfter(int.Parse(greet.DeleteTime.ToString()));
                 }
             }
             else
             {
                 var msg = await webhook.SendMessageAsync(content);
                 if (greet.DeleteTime > 0)
-                    user.Guild.GetTextChannel(greet.ChannelId).GetMessageAsync(msg).Result.DeleteAfter(int.Parse(greet.DeleteTime.ToString()));
+                    (await user.Guild.GetTextChannel(greet.ChannelId).GetMessageAsync(msg)).DeleteAfter(int.Parse(greet.DeleteTime.ToString()));
             }
         }
         else
         {
+            if (user.IsBot && !greet.GreetBots)
+                return;
             var channel = user.Guild.GetTextChannel(greet.ChannelId);
             var content = replacer.Replace(greet.Message);
             if (SmartEmbed.TryParse(content, out var embedData, out var plainText))
@@ -144,9 +148,12 @@ public class MultiGreetService : INService
     }
     private async Task HandleChannelGreets(IEnumerable<MultiGreet> multiGreets, SocketGuildUser user)
     {
+        
         var replacer = new ReplacementBuilder().WithUser(user).WithClient(client).WithServer(client, user.Guild).Build();
         foreach (var i in multiGreets.Where(x => x.WebhookUrl == null))
         {
+            if (user.IsBot && !i.GreetBots)
+                continue;
             if (i.WebhookUrl is not null) continue;
             var channel = user.Guild.GetTextChannel(i.ChannelId);
             var content = replacer.Replace(i.Message);
@@ -187,7 +194,8 @@ public class MultiGreetService : INService
         var replacer = new ReplacementBuilder().WithUser(user).WithClient(client).WithServer(client, user.Guild).Build();
         foreach (var i in multiGreets)
         {
-            
+            if (user.IsBot && !i.GreetBots)
+                continue;
             if (i.WebhookUrl is null) continue;
             var webhook = new DiscordWebhookClient(i.WebhookUrl);
             var content = replacer.Replace(i.Message);
@@ -197,28 +205,28 @@ public class MultiGreetService : INService
                 {
                     var msg = await webhook.SendMessageAsync(plainText, embeds: new[] { embedData.Build() });
                     if (i.DeleteTime > 0)
-                        user.Guild.GetTextChannel(i.ChannelId).GetMessageAsync(msg).Result.DeleteAfter(int.Parse(i.DeleteTime.ToString()));
+                        (await user.Guild.GetTextChannel(i.ChannelId).GetMessageAsync(msg)).DeleteAfter(int.Parse(i.DeleteTime.ToString()));
                 }
 
                 if (embedData is null && plainText is not null)
                 {
                     var msg = await webhook.SendMessageAsync(plainText);
                     if (i.DeleteTime > 0)
-                        user.Guild.GetTextChannel(i.ChannelId).GetMessageAsync(msg).Result.DeleteAfter(int.Parse(i.DeleteTime.ToString()));
+                        (await user.Guild.GetTextChannel(i.ChannelId).GetMessageAsync(msg)).DeleteAfter(int.Parse(i.DeleteTime.ToString()));
                 }
 
-                if (embedData is not null && plainText is "")
+                if (embedData is null || plainText is not "") continue;
                 {
                     var msg = await webhook.SendMessageAsync(embeds: new[] { embedData.Build() });
                     if (i.DeleteTime > 0)
-                        user.Guild.GetTextChannel(i.ChannelId).GetMessageAsync(msg).Result.DeleteAfter(int.Parse(i.DeleteTime.ToString()));
+                        (await user.Guild.GetTextChannel(i.ChannelId).GetMessageAsync(msg)).DeleteAfter(int.Parse(i.DeleteTime.ToString()));
                 }
             }
             else
             {
                 var msg = await webhook.SendMessageAsync(content);
                 if (i.DeleteTime > 0)
-                    user.Guild.GetTextChannel(i.ChannelId).GetMessageAsync(msg).Result.DeleteAfter(int.Parse(i.DeleteTime.ToString()));
+                    (await user.Guild.GetTextChannel(i.ChannelId).GetMessageAsync(msg)).DeleteAfter(int.Parse(i.DeleteTime.ToString()));
             }
         }
     }
@@ -247,15 +255,15 @@ public class MultiGreetService : INService
         if (GetGreets(guildId).Length == 30)
             return false;
         var toadd = new MultiGreet { ChannelId = channelId, GuildId = guildId };
-        var uow = _db.GetDbContext();
+        using var uow = _db.GetDbContext();
         uow.MultiGreets.Add(toadd);
-        uow.SaveChangesAsync();
+        _ = uow.SaveChangesAsync();
         return true;
     }
 
     public async Task ChangeMgMessage(MultiGreet greet, string code)
     {
-        var uow = _db.GetDbContext();
+        await using var uow = _db.GetDbContext();
         var toadd = new MultiGreet
         {
             Id = greet.Id,
@@ -272,7 +280,7 @@ public class MultiGreetService : INService
 
     public async Task ChangeMgDelete(MultiGreet greet, ulong howlong)
     {
-        var uow = _db.GetDbContext();
+        await using var uow = _db.GetDbContext();
         var toadd = new MultiGreet
         {
             Id = greet.Id,
@@ -289,7 +297,7 @@ public class MultiGreetService : INService
     
     public async Task ChangeMgGb(MultiGreet greet, bool enabled)
     {
-        var uow = _db.GetDbContext();
+        await using var uow = _db.GetDbContext();
         var toadd = new MultiGreet
         {
             Id = greet.Id,
@@ -306,7 +314,7 @@ public class MultiGreetService : INService
     
     public async Task ChangeMgWebhook(MultiGreet greet, string webhookurl)
     {
-        var uow = _db.GetDbContext();
+        await using var uow = _db.GetDbContext();
         var toadd = new MultiGreet
         {
             Id = greet.Id,
@@ -323,13 +331,13 @@ public class MultiGreetService : INService
 
     public async Task RemoveMultiGreetInternal(MultiGreet greet)
     {
-        var uow =  _db.GetDbContext();
+        await using var uow =  _db.GetDbContext();
         uow.MultiGreets.Remove(greet);
         await uow.SaveChangesAsync();
     }
     public async Task MultiRemoveMultiGreetInternal(MultiGreet[] greet)
     {
-        var uow =  _db.GetDbContext();
+        await using var uow =  _db.GetDbContext();
         uow.MultiGreets.RemoveRange(greet);
         await uow.SaveChangesAsync();
     }

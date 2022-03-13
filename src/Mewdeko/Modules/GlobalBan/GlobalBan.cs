@@ -91,10 +91,9 @@ public class GlobalBans : MewdekoModuleBase<GlobalBanService>
                         await msg.ModifyAsync(x => x.Embed = eb2.Build());
                         return;
                     }
-
                     var user = await ((DiscordSocketClient) ctx.Client).Rest.GetUserAsync(uid);
                     var channel =
-                        ((DiscordSocketClient) ctx.Client).Rest.GetChannelAsync(905109141620682782).Result as
+                        (await ((DiscordSocketClient) ctx.Client).Rest.GetChannelAsync(905109141620682782)) as
                         RestTextChannel;
                     var eb1 = new EmbedBuilder()
                         .WithTitle("New Global Ban Report Received!")
@@ -176,7 +175,7 @@ public class GlobalBans : MewdekoModuleBase<GlobalBanService>
                     var reasoning = await NextMessageAsync(ctx.Channel.Id, ctx.User.Id);
                     var user = await ((DiscordSocketClient) ctx.Client).Rest.GetUserAsync(uid);
                     var channel =
-                        ((DiscordSocketClient) ctx.Client).Rest.GetChannelAsync(905109141620682782).Result as
+                        (await ((DiscordSocketClient) ctx.Client).Rest.GetChannelAsync(905109141620682782)) as
                         RestTextChannel;
                     var eb1 = new EmbedBuilder()
                         .WithTitle("New Global Ban Report Received!")
@@ -265,7 +264,7 @@ public class GlobalBans : MewdekoModuleBase<GlobalBanService>
                     var otherUsers = await NextMessageAsync(ctx.Channel.Id, ctx.User.Id);
                     var user = await ((DiscordSocketClient) ctx.Client).Rest.GetUserAsync(uid);
                     var channel =
-                        ((DiscordSocketClient) ctx.Client).Rest.GetChannelAsync(905109141620682782).Result as
+                        (await ((DiscordSocketClient) ctx.Client).Rest.GetChannelAsync(905109141620682782)) as
                         RestTextChannel;
                     var eb1 = new EmbedBuilder()
                         .WithTitle("New Global Ban Report Received!")
@@ -354,7 +353,7 @@ public class GlobalBans : MewdekoModuleBase<GlobalBanService>
                     var otherUsers = await NextMessageAsync(ctx.Channel.Id, ctx.User.Id);
                     var user = await ((DiscordSocketClient) ctx.Client).Rest.GetUserAsync(uid);
                     var channel =
-                        ((DiscordSocketClient) ctx.Client).Rest.GetChannelAsync(905109141620682782).Result as
+                        (await ((DiscordSocketClient) ctx.Client).Rest.GetChannelAsync(905109141620682782)) as
                         RestTextChannel;
                     var eb1 = new EmbedBuilder()
                         .WithTitle("New Global Ban Report Received!")

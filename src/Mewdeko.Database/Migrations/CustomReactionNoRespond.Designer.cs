@@ -359,7 +359,7 @@ namespace Mewdeko.Database.Migrations
                 b.ToTable("CurrencyTransactions");
             });
 
-            modelBuilder.Entity("Mewdeko.Services.Database.Models.CustomReaction", b =>
+            modelBuilder.Entity("Mewdeko.Services.Database.Models.ChatTriggers", b =>
             {
                 b.Property<int>("Id")
                     .ValueGeneratedOnAdd()
@@ -406,7 +406,7 @@ namespace Mewdeko.Database.Migrations
 
                 b.HasKey("Id");
 
-                b.ToTable("CustomReactions");
+                b.ToTable("ChatTriggers");
             });
 
             modelBuilder.Entity("Mewdeko.Services.Database.Models.DelMsgOnCmdChannel", b =>

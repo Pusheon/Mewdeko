@@ -11,6 +11,7 @@ using Mewdeko._Extensions;
 using Mewdeko.Common;
 using Mewdeko.Common.Attributes;
 using Mewdeko.Common.Replacements;
+using Mewdeko.Database;
 using Mewdeko.Database.Extensions;
 using Mewdeko.Database.Models;
 using Mewdeko.Modules.OwnerOnly.Services;
@@ -19,6 +20,7 @@ using Mewdeko.Services.strings;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using Serilog;
 
@@ -36,6 +38,7 @@ public class OwnerOnly : MewdekoModuleBase<OwnerOnlyService>
 
     private readonly Mewdeko _bot;
     private readonly DiscordSocketClient _client;
+    private readonly DbService _db;
     private readonly ICoordinator _coord;
     private readonly IEnumerable<IConfigService> _settingServices;
     private readonly IBotStrings _strings;
@@ -43,7 +46,8 @@ public class OwnerOnly : MewdekoModuleBase<OwnerOnlyService>
 
 
     public OwnerOnly(DiscordSocketClient client, Mewdeko bot, IBotStrings strings,
-        InteractiveService serv, ICoordinator coord, IEnumerable<IConfigService> settingServices)
+        InteractiveService serv, ICoordinator coord, IEnumerable<IConfigService> settingServices,
+        DbService db)
     {
         _interactivity = serv;
         _client = client;
@@ -51,8 +55,18 @@ public class OwnerOnly : MewdekoModuleBase<OwnerOnlyService>
         _strings = strings;
         _coord = coord;
         _settingServices = settingServices;
+        _db = db;
     }
 
+    [MewdekoCommand, Usage, Description, Aliases, OwnerOnly]
+    public async Task SqlExec([Remainder] string sql)
+    {
+        if (!await PromptUserConfirmAsync("Are you sure you want to execute this??", ctx.User.Id))
+            return;
+        await using var uow = _db.GetDbContext();
+        var affected = await uow.Database.ExecuteSqlRawAsync(sql);
+        await ctx.Channel.SendErrorAsync($"Affected {affected} rows.");
+    }
     [MewdekoCommand, Usage, Description, Aliases, OwnerOnly]
     public async Task ListServers(int page = 1)
     {
@@ -652,17 +666,7 @@ public class OwnerOnly : MewdekoModuleBase<OwnerOnlyService>
         await ReplyConfirmLocalizedAsync("bot_name", Format.Bold(newName)).ConfigureAwait(false);
     }
 
-    [MewdekoCommand, Usage, Description, Aliases, UserPerm(GuildPermission.ManageNicknames),
-     BotPerm(GuildPermission.ChangeNickname), Priority(0)]
-    public async Task SetNick([Remainder] string? newNick = null)
-    {
-        if (string.IsNullOrWhiteSpace(newNick))
-            return;
-        var curUser = await ctx.Guild.GetCurrentUserAsync().ConfigureAwait(false);
-        await curUser.ModifyAsync(u => u.Nickname = newNick).ConfigureAwait(false);
-
-        await ReplyConfirmLocalizedAsync("bot_nick", Format.Bold(newNick) ?? "-").ConfigureAwait(false);
-    }
+    
 
 
     [MewdekoCommand, Usage, Description, Aliases, OwnerOnly]
@@ -868,7 +872,7 @@ public class OwnerOnly : MewdekoModuleBase<OwnerOnlyService>
                 "System.Net.Http", "System.Net.Http.Headers", "System.Reflection", "System.Text",
                 "System.Threading.Tasks", "Discord.Net", "Discord", "Discord.WebSocket", "Mewdeko.Modules",
                 "Mewdeko.Services", "Mewdeko._Extensions", "Mewdeko.Modules.Administration",
-                "Mewdeko.Modules.CustomReactions", "Mewdeko.Modules.Gambling", "Mewdeko.Modules.Games",
+                "Mewdeko.Modules.ChatTriggers", "Mewdeko.Modules.Gambling", "Mewdeko.Modules.Games",
                 "Mewdeko.Modules.Help", "Mewdeko.Modules.Music", "Mewdeko.Modules.Nsfw",
                 "Mewdeko.Modules.Permissions", "Mewdeko.Modules.Searches", "Mewdeko.Modules.Server_Management")
             .WithReferences(AppDomain.CurrentDomain.GetAssemblies()

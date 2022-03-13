@@ -239,7 +239,7 @@ public class SuggestionsCustomization : MewdekoModuleBase<SuggestionsService>
 
         var emotes = ctx.Message.Tags.Where(t => t.Type == TagType.Emoji).Select(x => (Emote) x.Value);
         foreach (var emoji in emotes)
-            if (!ctx.Guild.GetEmotesAsync().Result.Contains(emoji))
+            if (!(await ctx.Guild.GetEmotesAsync()).Contains(emoji))
             {
                 await ctx.Channel.SendMessageAsync(emoji.ToString());
                 await ctx.Channel.SendErrorAsync(

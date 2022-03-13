@@ -106,13 +106,15 @@ public class Help : MewdekoModuleBase<HelpService>
             $">  `{Prefix}cmds Administration`\n>  `{Prefix}cmds Moderation`\n>  `{Prefix}cmds Utility`\n>  `{Prefix}cmds Suggestions`\n>  `{Prefix}cmds Server Management`\n>  `{Prefix}cmds Permissions`\n>  `{Prefix}cmds Xp`\n>  `{Prefix}cmds Afk`\n>  `{Prefix}cmds Confessions`\n>  `{Prefix}cmds Starboard`",
             true);
         embed.AddField("_ _",
-            $">  `{Prefix}cmds Nsfw`\n>  `{Prefix}cmds Music`\n>  `{Prefix}cmds Gambling`\n>  `{Prefix}cmds Searches`\n>  `{Prefix}cmds Games`\n>  `{Prefix}cmds Help`\n>  `{Prefix}cmds Custom Reactions`\n>  `{Prefix}cmds Giveaways`\n>  `{Prefix}cmds MultiGreet`\n> `{Prefix}cmds Highlights",
+            $">  `{Prefix}cmds Nsfw`\n>  `{Prefix}cmds Music`\n>  `{Prefix}cmds Gambling`\n>  `{Prefix}cmds Searches`\n>  `{Prefix}cmds Games`\n>  `{Prefix}cmds Help`\n>  `{Prefix}cmds ChatTriggers`\n>  `{Prefix}cmds Giveaways`\n>  `{Prefix}cmds MultiGreet`\n> `{Prefix}cmds Highlights`",
             true);
         embed.AddField(" Links",
             "[Documentation](https://mewdeko.tech) | [Support Server](https://discord.gg/wB9FBMreRk) | [Invite Me](https://discord.com/oauth2/authorize?client_id=752236274261426212&scope=bot&permissions=66186303&scope=bot%20applications.commands) | [Top.gg Listing](https://top.gg/bot/752236274261426212) | [Donate!](https://ko-fi.com/mewdeko) ");
-        await ctx.Channel.SendMessageAsync(embed: embed.Build());
+        
+        await ctx.Channel.SendMessageAsync(embed: embed.Build(), components: Service.Builder.Build());
+        await Service.AddUser(ctx.Message, DateTime.UtcNow);
     }
-
+    
     [MewdekoCommand, Usage, Description, Aliases]
     public async Task Donate() =>
         await ctx.Channel.SendConfirmAsync(

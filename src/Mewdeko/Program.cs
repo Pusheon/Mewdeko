@@ -1,17 +1,13 @@
 global using System;
 global using System.Linq;
 global using Mewdeko.Services;
-global using Mewdeko;
 global using System.Threading.Tasks;
 global using System.Collections;
 global using System.Collections.Generic;
 using Serilog;
 using System.IO;
 using System.Net.Http;
-using System.Threading;
 
-ThreadPool.GetMinThreads(out _, out var completionPortThreads);
-ThreadPool.SetMinThreads( 200, completionPortThreads);
 var pid = Environment.ProcessId;
 
 var shardId = 0;

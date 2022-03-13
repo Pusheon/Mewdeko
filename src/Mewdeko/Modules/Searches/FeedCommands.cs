@@ -65,6 +65,15 @@ public partial class Searches
 
         [MewdekoCommand, Usage, Description, Aliases, RequireContext(ContextType.Guild),
          UserPerm(GuildPermission.ManageMessages)]
+        public async Task FeedMessage(int index, [Remainder]string message)
+        {
+            if (await Service.AddFeedMessage(ctx.Guild.Id, --index, message))
+                await ReplyConfirmLocalizedAsync("feed_msg_updated").ConfigureAwait(false);
+            else
+                await ReplyErrorLocalizedAsync("feed_out_of_range").ConfigureAwait(false);
+        }
+        [MewdekoCommand, Usage, Description, Aliases, RequireContext(ContextType.Guild),
+         UserPerm(GuildPermission.ManageMessages)]
         public async Task FeedList()
         {
             var feeds = Service.GetFeeds(ctx.Guild.Id);

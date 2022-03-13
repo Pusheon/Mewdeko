@@ -207,12 +207,12 @@ public class AfkService : INService
         return Task.CompletedTask;
     }
 
-    public IEnumerable<IGuildUser> GetAfkUsers(IGuild guild) =>
+    public async Task<IGuildUser[]> GetAfkUsers(IGuild guild) =>
         _cache.GetAfkForGuild(guild.Id) != null
             ? Array.Empty<IGuildUser>()
-            : _cache.GetAfkForGuild(guild.Id).GroupBy(m => m.UserId)
+            : await _cache.GetAfkForGuild(guild.Id).GroupBy(m => m.UserId)
                    .Where(m => !string.IsNullOrEmpty(m.Last().Message))
-                   .Select(m => guild.GetUserAsync(m.Key).Result);
+                   .Select(async m => await guild.GetUserAsync(m.Key)).WhenAll();
 
     public async Task SetCustomAfkMessage(IGuild guild, string afkMessage)
     {

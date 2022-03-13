@@ -378,7 +378,7 @@ public class SuggestionsService : INService
             }
             else
             {
-                var desc = await guild.GetTextChannelAsync(GetSuggestionChannel(guild.Id)).Result
+                var desc = await (await guild.GetTextChannelAsync(GetSuggestionChannel(guild.Id)))
                     .GetMessageAsync(suggest.MessageID);
                 eb = new EmbedBuilder()
                     .WithAuthor(use)
@@ -389,7 +389,7 @@ public class SuggestionsService : INService
             }
 
             var chan = await guild.GetTextChannelAsync(GetSuggestionChannel(guild.Id));
-            var message = chan.GetMessageAsync(suggest.MessageID).Result as IUserMessage;
+            var message = (await chan.GetMessageAsync(suggest.MessageID)) as IUserMessage;
             try
             {
                 await message.RemoveAllReactionsAsync();
@@ -412,7 +412,7 @@ public class SuggestionsService : INService
                 emb.AddField("Reason", rs);
                 emb.AddField("Denied By", user);
                 emb.WithErrorColor();
-                await guild.GetUserAsync(suggest.UserID).Result.SendMessageAsync(embed: emb.Build());
+                await (await guild.GetUserAsync(suggest.UserID)).SendMessageAsync(embed: emb.Build());
                 if (interaction is null)
                     await channel.SendConfirmAsync("Suggestion set as denied and the user has been dmed.");
                 else
@@ -430,8 +430,8 @@ public class SuggestionsService : INService
         {
             string sug;
             if (suggest.Suggestion == null)
-                sug = guild.GetTextChannelAsync(GetSuggestionChannel(guild.Id)).Result
-                    .GetMessageAsync(suggest.MessageID).Result.Embeds.FirstOrDefault()
+                sug = (await (await guild.GetTextChannelAsync(GetSuggestionChannel(guild.Id)))
+                    .GetMessageAsync(suggest.MessageID)).Embeds.FirstOrDefault()
                     ?.Description;
             else
                 sug = suggest.Suggestion;
@@ -490,7 +490,7 @@ public class SuggestionsService : INService
                 emb.AddField("Reason", rs);
                 emb.AddField("Denied By", user);
                 emb.WithOkColor();
-                await guild.GetUserAsync(suggest.UserID).Result.SendMessageAsync(embed: emb.Build());
+                await (await guild.GetUserAsync(suggest.UserID)).SendMessageAsync(embed: emb.Build());
                 if (interaction is null)
                     await channel.SendConfirmAsync("Suggestion set as denied and the user has been dmed the denial!");
                 else
@@ -543,7 +543,7 @@ public class SuggestionsService : INService
             }
             else
             {
-                var desc = await guild.GetTextChannelAsync(GetSuggestionChannel(guild.Id)).Result
+                var desc = await (await guild.GetTextChannelAsync(GetSuggestionChannel(guild.Id)))
                     .GetMessageAsync(suggest.MessageID);
                 eb = new EmbedBuilder()
                     .WithAuthor(use)
@@ -577,7 +577,7 @@ public class SuggestionsService : INService
                 emb.AddField("Reason", rs);
                 emb.AddField("Denied By", user);
                 emb.WithOkColor();
-                await guild.GetUserAsync(suggest.UserID).Result.SendMessageAsync(embed: emb.Build());
+                await (await guild.GetUserAsync(suggest.UserID)).SendMessageAsync(embed: emb.Build());
                 if (interaction is null)
                     await channel.SendConfirmAsync("Suggestion set as considered and the user has been dmed.");
                 else
@@ -595,8 +595,8 @@ public class SuggestionsService : INService
         {
             string sug;
             if (suggest.Suggestion == null)
-                sug = guild.GetTextChannelAsync(GetSuggestionChannel(guild.Id)).Result
-                           .GetMessageAsync(suggest.MessageID).Result.Embeds.FirstOrDefault()!.Description;
+                sug = (await (await guild.GetTextChannelAsync(GetSuggestionChannel(guild.Id)))
+                           .GetMessageAsync(suggest.MessageID)).Embeds.FirstOrDefault()!.Description;
             else
                 sug = suggest.Suggestion;
             var chan = await guild.GetTextChannelAsync(GetSuggestionChannel(guild.Id));
@@ -644,7 +644,7 @@ public class SuggestionsService : INService
                 emb.AddField("Reason", rs);
                 emb.AddField("Considered by", user);
                 emb.WithOkColor();
-                await guild.GetUserAsync(suggest.UserID).Result.SendMessageAsync(embed: emb.Build());
+                await (await guild.GetUserAsync(suggest.UserID)).SendMessageAsync(embed: emb.Build());
                 if (interaction is null)
                     await channel.SendConfirmAsync("Suggestion set as considered and the user has been dmed.");
                 else
@@ -697,7 +697,7 @@ public class SuggestionsService : INService
             }
             else
             {
-                var desc = await guild.GetTextChannelAsync(GetSuggestionChannel(guild.Id)).Result
+                var desc = await (await guild.GetTextChannelAsync(GetSuggestionChannel(guild.Id)))
                     .GetMessageAsync(suggest.MessageID);
                 eb = new EmbedBuilder()
                     .WithAuthor(use)
@@ -731,7 +731,7 @@ public class SuggestionsService : INService
                 emb.AddField("Reason", rs);
                 emb.AddField("Implemented By", user);
                 emb.WithOkColor();
-                await guild.GetUserAsync(suggest.UserID).Result.SendMessageAsync(embed: emb.Build());
+                await (await guild.GetUserAsync(suggest.UserID)).SendMessageAsync(embed: emb.Build());
                 if (interaction is null)
                     await channel.SendConfirmAsync("Suggestion set as implemented and the user has been dmed.");
                 else
@@ -750,8 +750,8 @@ public class SuggestionsService : INService
         {
             string sug;
             if (suggest.Suggestion == null)
-                sug = guild.GetTextChannelAsync(GetSuggestionChannel(guild.Id)).Result
-                    .GetMessageAsync(suggest.MessageID).Result.Embeds.FirstOrDefault()
+                sug = (await (await guild.GetTextChannelAsync(GetSuggestionChannel(guild.Id)))
+                    .GetMessageAsync(suggest.MessageID)).Embeds.FirstOrDefault()
                     ?.Description;
             else
                 sug = suggest.Suggestion;
@@ -797,7 +797,7 @@ public class SuggestionsService : INService
                 emb.AddField("Reason", rs);
                 emb.AddField("Implemented By", user);
                 emb.WithOkColor();
-                await guild.GetUserAsync(suggest.UserID).Result.SendMessageAsync(embed: emb.Build());
+                await (await guild.GetUserAsync(suggest.UserID)).SendMessageAsync(embed: emb.Build());
                 if (interaction is null)
                     await channel.SendConfirmAsync("Suggestion set as implemented and the user has been dmed.");
                 else
@@ -846,7 +846,7 @@ public class SuggestionsService : INService
             }
             else
             {
-                var desc = await guild.GetTextChannelAsync(GetSuggestionChannel(guild.Id)).Result
+                var desc = await (await guild.GetTextChannelAsync(GetSuggestionChannel(guild.Id)))
                     .GetMessageAsync(suggest.MessageID);
                 eb = new EmbedBuilder()
                     .WithAuthor(use)
@@ -880,7 +880,7 @@ public class SuggestionsService : INService
                 emb.AddField("Reason", rs);
                 emb.AddField("Accepted By", user);
                 emb.WithOkColor();
-                await guild.GetUserAsync(suggest.UserID).Result.SendMessageAsync(embed: emb.Build());
+                await (await guild.GetUserAsync(suggest.UserID)).SendMessageAsync(embed: emb.Build());
                 if (interaction is null)
                     await channel.SendConfirmAsync("Suggestion set as accepted and the user has been dmed.");
                 else
@@ -899,8 +899,8 @@ public class SuggestionsService : INService
         {
             string sug;
             if (suggest.Suggestion is null)
-                sug = guild.GetTextChannelAsync(GetSuggestionChannel(guild.Id)).Result
-                    .GetMessageAsync(suggest.MessageID).Result.Embeds.FirstOrDefault().Description;
+                sug = (await (await guild.GetTextChannelAsync(GetSuggestionChannel(guild.Id)))
+                    .GetMessageAsync(suggest.MessageID)).Embeds.FirstOrDefault().Description;
             else
                 sug = suggest.Suggestion;
             var chan = await guild.GetTextChannelAsync(GetSuggestionChannel(guild.Id));
@@ -945,7 +945,7 @@ public class SuggestionsService : INService
                 emb.AddField("Reason", rs);
                 emb.AddField("Accepted By", user);
                 emb.WithOkColor();
-                await guild.GetUserAsync(suggest.UserID).Result.SendMessageAsync(embed: emb.Build());
+                await (await guild.GetUserAsync(suggest.UserID)).SendMessageAsync(embed: emb.Build());
                 if (interaction is null)
                     await channel.SendConfirmAsync("Suggestion set as accepted and the user has been dmed.");
                 else

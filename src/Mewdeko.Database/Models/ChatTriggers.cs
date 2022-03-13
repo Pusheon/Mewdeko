@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 
 namespace Mewdeko.Database.Models;
 
-public class CustomReaction : DbEntity
+public class ChatTriggers : DbEntity
 {
     [NotMapped] public Regex Regex { get; set; }
 

@@ -213,17 +213,22 @@ WHERE GuildId in (SELECT GuildId FROM GuildConfigs WHERE WarnExpireHours > 0 AND
             return;
 
         var hours = $"{-config.WarnExpireHours} hours";
-        if (config.WarnExpireAction == WarnExpireAction.Clear)
-            await uow.Database.ExecuteSqlInterpolatedAsync($@"UPDATE warnings
+        switch (config.WarnExpireAction)
+        {
+            case WarnExpireAction.Clear:
+                await uow.Database.ExecuteSqlInterpolatedAsync($@"UPDATE warnings
 SET Forgiven = 1,
     ForgivenBy = 'Expiry'
 WHERE GuildId={guildId}
     AND Forgiven = 0
     AND DateAdded < datetime('now', {hours})");
-        else if (config.WarnExpireAction == WarnExpireAction.Delete)
-            await uow.Database.ExecuteSqlInterpolatedAsync($@"DELETE FROM warnings
+                break;
+            case WarnExpireAction.Delete:
+                await uow.Database.ExecuteSqlInterpolatedAsync($@"DELETE FROM warnings
 WHERE GuildId={guildId}
     AND DateAdded < datetime('now', {hours})");
+                break;
+        }
 
         await uow.SaveChangesAsync();
     }

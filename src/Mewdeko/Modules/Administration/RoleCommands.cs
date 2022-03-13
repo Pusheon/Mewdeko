@@ -154,7 +154,7 @@ public partial class Administration
                     var ch = await g.GetTextChannelAsync(rr.ChannelId);
                     IUserMessage msg = null;
                     if (ch is not null)
-                        msg = ch.GetMessageAsync(rr.MessageId).Result as IUserMessage;
+                        msg = (await ch.GetMessageAsync(rr.MessageId)) as IUserMessage;
                     var eb = new PageBuilder().WithOkColor();
                     return
                         eb.AddField("ID", rr.Index + 1).AddField($"Roles ({rr.ReactionRoles.Count})",

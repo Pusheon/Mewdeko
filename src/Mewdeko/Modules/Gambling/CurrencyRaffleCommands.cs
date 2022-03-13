@@ -45,10 +45,15 @@ public partial class Gambling
             }
             else
             {
-                if (res.Item2 == CurrencyRaffleService.JoinErrorType.AlreadyJoinedOrInvalidAmount)
-                    await ReplyErrorLocalizedAsync("rafflecur_already_joined").ConfigureAwait(false);
-                else if (res.Item2 == CurrencyRaffleService.JoinErrorType.NotEnoughCurrency)
-                    await ReplyErrorLocalizedAsync("not_enough", CurrencySign).ConfigureAwait(false);
+                switch (res.Item2)
+                {
+                    case CurrencyRaffleService.JoinErrorType.AlreadyJoinedOrInvalidAmount:
+                        await ReplyErrorLocalizedAsync("rafflecur_already_joined").ConfigureAwait(false);
+                        break;
+                    case CurrencyRaffleService.JoinErrorType.NotEnoughCurrency:
+                        await ReplyErrorLocalizedAsync("not_enough", CurrencySign).ConfigureAwait(false);
+                        break;
+                }
             }
         }
     }

@@ -199,11 +199,11 @@ donate:
   args:
     - ''
 rtt:
-  desc: 'Toggles whether the bot responds to the response of a custom reaction or the trigger.'
+  desc: 'Toggles whether the bot responds to the response of a Chat Trigger or the trigger.'
   args:
     - '420'
-crnr:
-  desc: "Toggles whether the bot sends a message with a custom reaction. Turning this off automatically makes any emote reactions react to the trigger."
+ctnr:
+  desc: "Toggles whether the bot sends a message with a Chat Trigger. Turning this off automatically makes any emote reactions react to the trigger."
   args:
    - "69420"
 modules:
@@ -1002,60 +1002,60 @@ iamnot:
     roles.
   args:
     - Gamer
-addcustreact:
+addchattrigger:
   desc: >-
-    Add a custom reaction with a trigger and a response. Running this command in
+    Add a Chat Trigger with a trigger and a response. Running this command in
     server requires the Administration permission. Running this command in DM is
-    Bot Owner only and adds a new global custom reaction. Guide here:
-    https://mewdeko.tech/customreactions
+    Bot Owner only and adds a new global Chat Trigger. Guide here:
+    https://mewdeko.tech/chattriggers
   args:
     - '"hello" Hi there %user.mention%'
-listcustreact:
+listchattriggers:
   desc: >-
-    Lists global or server custom reactions (20 commands per page). Running the
-    command in DM will list global custom reactions, while running it in server
-    will list that server's custom reactions. Specifying `all` parameter instead
-    of the number will DM you a text file with a list of all custom reactions.
+    Lists global or server Chat Triggers (20 commands per page). Running the
+    command in DM will list global Chat Triggers, while running it in server
+    will list that server's Chat Triggers. Specifying `all` parameter instead
+    of the number will DM you a text file with a list of all Chat Triggers.
   args:
     - '1'
     - all
-listcustreactg:
+listchattriggersgroup:
   desc: >-
-    Lists global or server custom reactions (20 commands per page) grouped by
+    Lists global or server Chat Triggers (20 commands per page) grouped by
     trigger, and show a number of responses for each. Running the command in DM
-    will list global custom reactions, while running it in server will list that
-    server's custom reactions.
+    will list global Chat Triggers, while running it in server will list that
+    server's Chat Triggers.
   args:
     - '1'
-showcustreact:
-  desc: Shows a custom reaction's response on a given ID.
+showchattrigger:
+  desc: Shows a Chat Trigger's response on a given ID.
   args:
     - '1'
-delcustreact:
+deletechattrigger:
   desc: >-
-    Deletes a custom reaction on a specific index. If ran in DM, it is bot owner
-    only and deletes a global custom reaction. If ran in a server, it requires
-    Administration privileges and removes server custom reaction.
+    Deletes a Chat Trigger on a specific index. If ran in DM, it is bot owner
+    only and deletes a global Chat Trigger. If ran in a server, it requires
+    Administration privileges and removes server Chat Trigger.
   args:
     - '5'
-crclear:
-  desc: Deletes all custom reactions on this server.
+ctsclear:
+  desc: Deletes all Chat Triggers on this server.
   args:
     - ''
 fwclear:
   desc: Deletes all filtered words on this server.
   args:
     - ''
-crsimport:
+ctsimport:
   desc: >-
     Upload the file or send the raw .yml data with this command to import all
-    custom reactions from the specified string or file into the current server
-    (or as global custom reactions in dm)
+    Chat Triggers from the specified string or file into the current server
+    (or as global Chat Triggers in dm)
   args:
     - <upload .yml file>
-crsexport:
+ctsexport:
   desc: >-
-    Exports custom reactions from the current server (or global custom reactions
+    Exports Chat Triggers from the current server (or global Chat Triggers
     in DMs) into a .yml file
   args:
     - ''
@@ -2399,9 +2399,13 @@ place:
 poll:
   desc: >-
     Creates a public poll which requires users to type a number of the voting
-    option in the channel command is ran in.
+    option in the channel command is ran in. Can have multiple modes:
+    > `SingleAnswer` - Users can only pick a single answer and cant change it. Default when not used with a mode.
+    > `AllowChange` - Users can change their answers.
+    > `MultiAnswer` - Users can select more than one answer.
   args:
     - Question?;Answer1;Answ 2;A_3
+    - MultiAnswer Question;answer;answer;answer
 autotranslang:
   desc: >-
     Sets your source and target language to be used with `{0}at`. Specify no
@@ -2443,7 +2447,7 @@ hentaibomb:
 cleverbot:
   desc: >-
     Toggles cleverbot session. When enabled, the bot will reply to messages
-    starting with bot mention in the server. Custom reactions starting with
+    starting with bot mention in the server. Chat Triggers starting with
     %bot.mention% won't work if cleverbot is enabled.
   args:
     - ''
@@ -2718,45 +2722,45 @@ rategirl:
     location and appear anywhere else on the chart.
   args:
     - '@SomeGurl'
-crreact:
+ctreact:
   desc: >-
     Sets or resets reactions (up to 3) which will be added to the response
-    message of the CustomReaction with the specified ID. Provide no emojis to
+    message of the ChatTrigger with the specified ID. Provide no emojis to
     reset.
   args:
     - "59 \U0001F44D \U0001F44E "
     - '59 <a:nFlower:408963839191941120>'
     - '59'
-crad:
+ctad:
   desc: >-
-    Toggles whether the message triggering the custom reaction will be
+    Toggles whether the message triggering the Chat Trigger will be
     automatically deleted.
   args:
     - '59'
-crat:
+ctat:
   desc: >-
-    Toggles whether the custom reaction will allow extra input after the
-    trigger. For example, with this feature enabled, custom reaction with
+    Toggles whether the Chat Trigger will allow extra input after the
+    trigger. For example, with this feature enabled, Chat Trigger with
     trigger 'hi' will also be invoked when a user types 'hi there'. This feature
-    is automatically enabled on custom reactions which have '%target%' in their
+    is automatically enabled on Chat Triggers which have '%target%' in their
     response.
   args:
     - '59'
-crdm:
+ctdm:
   desc: >-
-    Toggles whether the response message of the custom reaction will be sent as
+    Toggles whether the response message of the Chat Trigger will be sent as
     a direct message.
   args:
     - '44'
-crca:
+ctca:
   desc: >-
-    Toggles whether the custom reaction will trigger if the triggering message
+    Toggles whether the Chat Trigger will trigger if the triggering message
     contains the keyword (instead of only starting with it).
   args:
     - '44'
-crsreload:
+ctsreload:
   desc: >-
-    Reloads all custom reactions on all shards. Use this if you've made changes
+    Reloads all Chat Triggers on all shards. Use this if you've made changes
     to the database while the bot is running, or used `{0}deleteunusedcrnq`
   args:
     - ''
@@ -3226,6 +3230,10 @@ feed:
   args:
     - 'https://www.rt.com/rss/'
     - 'https://www.rt.com/rss/ #updates'
+feedmessage:
+  desc: "Add a custom message to a certain feed. Find the number using {0}feeds. You can use https://eb.mewdeko.tech along with https://mewdeko.tech/placeholders to make cool embeds with this."
+  args:
+    - '1 embedcode'
 feedremove:
   desc: >-
     Stops tracking a feed on the given index. Use `{0}feeds` command to see a
@@ -3236,8 +3244,8 @@ feedlist:
   desc: Shows the list of feeds you've subscribed to on this server.
   args:
     - ''
-editcustreact:
-  desc: Edits the custom reaction's response given its ID.
+editchattrigger:
+  desc: Edits the Chat Trigger's response given its ID.
   args:
     - 123 I'm a magical girl
 say:

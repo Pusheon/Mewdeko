@@ -414,23 +414,25 @@ public partial class Gambling : GamblingModuleBase<GamblingService>
         {
             try
             {
-                if (reason == RollDuelGame.Reason.Normal)
+                switch (reason)
                 {
-                    var winner = rdGame.Winner == rdGame.P1
-                        ? ctx.User
-                        : u;
-                    embed.Description +=
-                        $"\n**{winner}** Won {N((long) (rdGame.Amount * 2 * 0.98)) + CurrencySign}";
-                    await rdMsg.ModifyAsync(x => x.Embed = embed.Build())
-                        .ConfigureAwait(false);
-                }
-                else if (reason == RollDuelGame.Reason.Timeout)
-                {
-                    await ReplyErrorLocalizedAsync("roll_duel_timeout").ConfigureAwait(false);
-                }
-                else if (reason == RollDuelGame.Reason.NoFunds)
-                {
-                    await ReplyErrorLocalizedAsync("roll_duel_no_funds").ConfigureAwait(false);
+                    case RollDuelGame.Reason.Normal:
+                        {
+                            var winner = rdGame.Winner == rdGame.P1
+                                ? ctx.User
+                                : u;
+                            embed.Description +=
+                                $"\n**{winner}** Won {N((long) (rdGame.Amount * 2 * 0.98)) + CurrencySign}";
+                            await rdMsg.ModifyAsync(x => x.Embed = embed.Build())
+                                       .ConfigureAwait(false);
+                            break;
+                        }
+                    case RollDuelGame.Reason.Timeout:
+                        await ReplyErrorLocalizedAsync("roll_duel_timeout").ConfigureAwait(false);
+                        break;
+                    case RollDuelGame.Reason.NoFunds:
+                        await ReplyErrorLocalizedAsync("roll_duel_no_funds").ConfigureAwait(false);
+                        break;
                 }
             }
             finally

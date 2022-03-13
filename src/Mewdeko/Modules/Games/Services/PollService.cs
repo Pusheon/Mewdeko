@@ -83,18 +83,15 @@ public class PollService : INService
 
     public Poll StopPoll(ulong guildId)
     {
-        if (ActivePolls.TryRemove(guildId, out var pr))
+        if (!ActivePolls.TryRemove(guildId, out var pr)) return null;
+        using (var uow = _db.GetDbContext())
         {
-            using (var uow = _db.GetDbContext())
-            {
-                uow.RemovePoll(pr.Poll.Id);
-                uow.SaveChanges();
-            }
-
-            return pr.Poll;
+            uow.RemovePoll(pr.Poll.Id);
+            uow.SaveChanges();
         }
 
-        return null;
+        return pr.Poll;
+
     }
     
 }

@@ -121,7 +121,7 @@ public class HighlightsService : INService, IReadyExecutor
 
     private async Task CacheToRedis()
     {
-        var uow = _db.GetDbContext();
+        await using var uow = _db.GetDbContext();
         var allHighlights = uow.Highlights.AllHighlights();
         var allHighlightSettings = uow.HighlightSettings.AllHighlightSettings();
         var guilds = await _client.Rest.GetGuildsAsync();
@@ -135,7 +135,7 @@ public class HighlightsService : INService, IReadyExecutor
     public async Task AddHighlight(ulong guildId, ulong userId, string word)
     {
         var toadd = new Database.Models.Highlights { UserId = userId, GuildId = guildId, Word = word };
-        var uow = _db.GetDbContext();
+        await using var uow = _db.GetDbContext();
         uow.Highlights.Add(toadd);
         var current = _cache.GetHighlightsForGuild(guildId) ?? new List<Database.Models.Highlights>();
         current.Add(toadd);
@@ -144,7 +144,7 @@ public class HighlightsService : INService, IReadyExecutor
 
     public async Task ToggleHighlights(ulong guildId, ulong userId, bool enabled)
     {
-        var uow = _db.GetDbContext();
+        await using var uow = _db.GetDbContext();
         var toupdate = uow.HighlightSettings.FirstOrDefault(x => x.UserId == userId && x.GuildId == guildId);
         if (toupdate is null)
         {
@@ -173,7 +173,7 @@ public class HighlightsService : INService, IReadyExecutor
     public async Task<bool> ToggleIgnoredChannel(ulong guildId, ulong userId, string channelId)
     {
         bool ignored = true;
-        var uow = _db.GetDbContext();
+        await using var uow = _db.GetDbContext();
         var toupdate = uow.HighlightSettings.FirstOrDefault(x => x.UserId == userId && x.GuildId == guildId);
         if (toupdate is null)
         {
@@ -215,7 +215,7 @@ public class HighlightsService : INService, IReadyExecutor
     public async Task<bool> ToggleIgnoredUser(ulong guildId, ulong userId, string userToIgnore)
     {
         bool ignored = true;
-        var uow = _db.GetDbContext();
+        await using var uow = _db.GetDbContext();
         var toupdate = uow.HighlightSettings.FirstOrDefault(x => x.UserId == userId && x.GuildId == guildId);
         if (toupdate is null)
         {
@@ -257,7 +257,7 @@ public class HighlightsService : INService, IReadyExecutor
     public async Task RemoveHighlight(ulong guildId, ulong userId, string word)
     {
         var toremove = new Database.Models.Highlights { UserId = userId, GuildId = guildId, Word = word };
-        var uow = _db.GetDbContext();
+        await using var uow = _db.GetDbContext();
         uow.Highlights.Remove(toremove);
         var current = _cache.GetHighlightsForGuild(guildId) ?? new List<Database.Models.Highlights>();
         if (current.Any())

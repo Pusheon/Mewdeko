@@ -5,8 +5,8 @@ namespace Mewdeko.Database.Migrations;
 public partial class CustomReactionNoRespond : Migration
 {
     protected override void Up(MigrationBuilder migrationBuilder) =>
-        migrationBuilder.AddColumn<string>("NoRespond", "CustomReactions", "Integer", defaultValue: 0, nullable: true);
+        migrationBuilder.AddColumn<string>("NoRespond", "ChatTriggers", "Integer", defaultValue: 0, nullable: true);
 
     protected override void Down(MigrationBuilder migrationBuilder) =>
-        migrationBuilder.DropColumn("CustomReactions", "NoRespond");
+        migrationBuilder.DropColumn("ChatTriggers", "NoRespond");
 }

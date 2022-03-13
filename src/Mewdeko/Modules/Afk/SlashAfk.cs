@@ -127,7 +127,7 @@ public class SlashAfk : MewdekoSlashModuleBase<AfkService>
             await ctx.Interaction.SendErrorAsync("Hold your horses I just started back up! Give me a few seconds then this command will be ready!\nIn the meantime check out https://mewdeko.tech/changelog for bot updates!");
             return;
         }
-        var afks = Service.GetAfkUsers(ctx.Guild);
+        var afks = await Service.GetAfkUsers(ctx.Guild);
         if (!afks.Any())
         {
             await ctx.Interaction.SendErrorAsync("There are no currently AFK users!");

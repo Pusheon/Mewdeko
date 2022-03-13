@@ -29,7 +29,7 @@ public partial class Utility
         {
             var eb = new EmbedBuilder().WithOkColor().WithTitle(role.Name)
                                        .AddField("Users in role",
-                                           ctx.Guild.GetUsersAsync().Result.Count(x => x.RoleIds.Contains(role.Id)))
+                                           (await ctx.Guild.GetUsersAsync()).Count(x => x.RoleIds.Contains(role.Id)))
                                        .AddField("Is Mentionable", role.IsMentionable)
                                        .AddField("Is Hoisted", role.IsHoisted).AddField("Color", role.Color.RawValue)
                                        .AddField("Is Managed", role.IsManaged)
@@ -52,7 +52,7 @@ public partial class Utility
                 // ReSharper disable once ConditionIsAlwaysTrueOrFalse
                 case null when channel is not null:
                     eb.WithTitle(channel.Name);
-                    eb.AddField("Users", channel.GetUsersAsync().FlattenAsync().Result.Count());
+                    eb.AddField("Users", (await channel.GetUsersAsync().FlattenAsync()).Count());
                     eb.AddField("Created On", channel.CreatedAt);
                     eb.AddField("Bitrate", channel.Bitrate);
                     eb.AddField("User Limit", channel.UserLimit == null ? "Infinite" : channel.UserLimit);
@@ -65,7 +65,7 @@ public partial class Utility
             if (voiceChannel is not null && channel is not null)
             {
                 eb.WithTitle(channel.Name);
-                eb.AddField("Users", channel.GetUsersAsync().FlattenAsync().Result.Count());
+                eb.AddField("Users", (await channel.GetUsersAsync().FlattenAsync()).Count());
                 eb.AddField("Created On", channel.CreatedAt);
                 eb.AddField("Bitrate", channel.Bitrate);
                 eb.AddField("User Limit", channel.UserLimit == null ? "Infinite" : channel.UserLimit);
@@ -77,7 +77,7 @@ public partial class Utility
             if (voiceChannel is not null && channel is null)
             {
                 eb.WithTitle(voiceChannel.Name);
-                eb.AddField("Users", voiceChannel.GetUsersAsync().FlattenAsync().Result.Count());
+                eb.AddField("Users", (await voiceChannel.GetUsersAsync().FlattenAsync()).Count());
                 eb.AddField("Created On", voiceChannel.CreatedAt);
                 eb.AddField("Bitrate", voiceChannel.Bitrate);
                 eb.AddField("User Limit", voiceChannel.UserLimit == null ? "Infinite" : voiceChannel.UserLimit);
@@ -93,8 +93,9 @@ public partial class Utility
             var usr = await _client.Rest.GetUserAsync(id);
             if (usr is null)
             {
+                var chans = await ctx.Guild.GetTextChannelsAsync();
                 IUserMessage message = null;
-                foreach (var i in ctx.Guild.GetTextChannelsAsync().Result)
+                foreach (var i in chans)
                 {
                     var e = await i.GetMessageAsync(id);
                     if (e is not null)
@@ -170,8 +171,8 @@ public partial class Utility
                 var vals = Enum.GetValues(typeof(GuildFeature)).Cast<GuildFeature>();
                 var setFeatures = vals.Where(x => guild.Features.Value.HasFlag(x));
                 embed
-                    .AddField("Bots", ctx.Guild.GetUsersAsync().Result.Count(x => x.IsBot))
-                    .AddField("Users", ctx.Guild.GetUsersAsync().Result.Count(x => !x.IsBot))
+                    .AddField("Bots", (await ctx.Guild.GetUsersAsync()).Count(x => x.IsBot))
+                    .AddField("Users", (await ctx.Guild.GetUsersAsync()).Count(x => !x.IsBot))
                     .AddField("Text Channels", textchn.ToString())
                     .AddField("Voice Channels", voicechn.ToString())
                     .AddField("Created On", $"{createdAt:MM/dd/yyyy HH:mm}")
@@ -194,7 +195,7 @@ public partial class Utility
                 .WithTitle(ch.Name)
                 .AddField(GetText("id"), ch.Id.ToString())
                 .AddField(GetText("created_at"), $"{createdAt:dd.MM.yyyy HH:mm}")
-                .AddField(GetText("users"), ch.GetUsersAsync().FlattenAsync().Result.Count())
+                .AddField(GetText("users"), (await ch.GetUsersAsync().FlattenAsync()).Count())
                 .AddField("Topic", ch.Topic ?? "None")
                 .WithColor(Mewdeko.OkColor);
             await ctx.Channel.EmbedAsync(embed).ConfigureAwait(false);
@@ -205,7 +206,7 @@ public partial class Utility
         {
             var component = new ComponentBuilder().WithButton("More Info", "moreinfo");
             var user = usr ?? ctx.User as IGuildUser;
-            var userbanner = _client.Rest.GetUserAsync(user.Id).Result.GetBannerUrl(size: 2048);
+            var userbanner = (await _client.Rest.GetUserAsync(user.Id)).GetBannerUrl(size: 2048);
             string serverUserType;
             if (user.GuildPermissions.ManageMessages)
                 serverUserType = "Helper";

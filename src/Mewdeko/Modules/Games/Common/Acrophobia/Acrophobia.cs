@@ -73,24 +73,23 @@ public sealed class AcrophobiaGame : IDisposable
         await _locker.WaitAsync().ConfigureAwait(false);
         try
         {
-            if (_submissions.Count == 0)
+            switch (_submissions.Count)
             {
-                CurrentPhase = Phase.Ended;
-                await OnVotingStarted(this, ImmutableArray.Create<KeyValuePair<AcrophobiaUser, int>>())
-                    .ConfigureAwait(false);
-                return;
+                case 0:
+                    CurrentPhase = Phase.Ended;
+                    await OnVotingStarted(this, ImmutableArray.Create<KeyValuePair<AcrophobiaUser, int>>())
+                        .ConfigureAwait(false);
+                    return;
+                case 1:
+                    CurrentPhase = Phase.Ended;
+                    await OnVotingStarted(this, _submissions.ToArray().ToImmutableArray()).ConfigureAwait(false);
+                    return;
+                default:
+                    CurrentPhase = Phase.Voting;
+
+                    await OnVotingStarted(this, _submissions.ToArray().ToImmutableArray()).ConfigureAwait(false);
+                    break;
             }
-
-            if (_submissions.Count == 1)
-            {
-                CurrentPhase = Phase.Ended;
-                await OnVotingStarted(this, _submissions.ToArray().ToImmutableArray()).ConfigureAwait(false);
-                return;
-            }
-
-            CurrentPhase = Phase.Voting;
-
-            await OnVotingStarted(this, _submissions.ToArray().ToImmutableArray()).ConfigureAwait(false);
         }
         finally
         {

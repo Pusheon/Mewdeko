@@ -87,22 +87,20 @@ public partial class Games
         private async Task Game_OnVotingStarted(AcrophobiaGame game,
             ImmutableArray<KeyValuePair<AcrophobiaUser, int>> submissions)
         {
-            if (submissions.Length == 0)
+            switch (submissions.Length)
             {
-                await ctx.Channel.SendErrorAsync(GetText("acrophobia"), GetText("acro_ended_no_sub"))
-                    .ConfigureAwait(false);
-                return;
-            }
-
-            if (submissions.Length == 1)
-            {
-                await ctx.Channel.EmbedAsync(new EmbedBuilder().WithOkColor()
-                        .WithDescription(
-                            GetText("acro_winner_only",
-                                Format.Bold(submissions.First().Key.UserName)))
-                        .WithFooter(efb => efb.WithText(submissions.First().Key.Input)))
-                    .ConfigureAwait(false);
-                return;
+                case 0:
+                    await ctx.Channel.SendErrorAsync(GetText("acrophobia"), GetText("acro_ended_no_sub"))
+                             .ConfigureAwait(false);
+                    return;
+                case 1:
+                    await ctx.Channel.EmbedAsync(new EmbedBuilder().WithOkColor()
+                                                                   .WithDescription(
+                                                                       GetText("acro_winner_only",
+                                                                           Format.Bold(submissions.First().Key.UserName)))
+                                                                   .WithFooter(efb => efb.WithText(submissions.First().Key.Input)))
+                             .ConfigureAwait(false);
+                    return;
             }
 
 

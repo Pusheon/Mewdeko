@@ -73,23 +73,29 @@ public class SearchImagesService : ISearchImagesService, INService
                 Url = ""
             };
         }
-
-        Log.Information("Getting {V} image for Guild: {GuildId}...", dapi.ToString(), guildId);
+#if  DEBUG
+        Log.Information("Getting {V} image for Guild: {GuildId}...", dapi.ToString(), guildId);  
+#endif
         try
         {
             _blacklistedTags.TryGetValue(guildId, out var blTags);
 
-            if (dapi == Booru.E621) {
-                for (var i = 0; i < tags.Length; ++i)
-                    if (tags[i] == "yuri")
-                        tags[i] = "female/female";
-            }
-
-            if (dapi == Booru.Derpibooru)
+            switch (dapi)
             {
-                for (var i = 0; i < tags.Length; ++i)
-                    if (tags[i] == "yuri")
-                        tags[i] = "lesbian";
+                case Booru.E621:
+                    {
+                        for (var i = 0; i < tags.Length; ++i)
+                            if (tags[i] == "yuri")
+                                tags[i] = "female/female";
+                        break;
+                    }
+                case Booru.Derpibooru:
+                    {
+                        for (var i = 0; i < tags.Length; ++i)
+                            if (tags[i] == "yuri")
+                                tags[i] = "lesbian";
+                        break;
+                    }
             }
 
             var result = await _cache.GetImageNew(tags, forceExplicit, dapi, blTags ?? new HashSet<string>(), cancel)

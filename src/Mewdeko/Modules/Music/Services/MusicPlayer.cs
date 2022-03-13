@@ -61,13 +61,11 @@ public class MusicPlayer : LavalinkPlayer
         {
            //ignored
         }
-        var resultMusicChannelId = _musicService.GetSettingsInternalAsync(args.Player.GuildId).Result.MusicChannelId;
+        var resultMusicChannelId = (await _musicService.GetSettingsInternalAsync(args.Player.GuildId)).MusicChannelId;
         if (resultMusicChannelId != null)
         {
-            
-            var channel = _client.GetChannel(
-                resultMusicChannelId.Value) as SocketTextChannel;
-            if (channel is not null)
+            if (_client.GetChannel(
+                    resultMusicChannelId.Value) is SocketTextChannel channel)
             {
                 if (track.Source != null)
                 {
@@ -112,12 +110,11 @@ public class MusicPlayer : LavalinkPlayer
                     await args.Player.PlayAsync(_musicService.GetQueue(gid).FirstOrDefault());
                     return;
                 }
-
                 var eb1 = new EmbedBuilder()
-                    .WithOkColor()
-                    .WithDescription("I have reached the end of the queue!");
+                          .WithOkColor()
+                          .WithDescription("I have reached the end of the queue!");
                 await channel.SendMessageAsync(embed: eb1.Build());
-                if (_musicService.GetSettingsInternalAsync(args.Player.GuildId).Result.AutoDisconnect is
+                if ((await _musicService.GetSettingsInternalAsync(args.Player.GuildId)).AutoDisconnect is
                     AutoDisconnect.Either or AutoDisconnect.Queue)
                 {
                     await args.Player.StopAsync(true);

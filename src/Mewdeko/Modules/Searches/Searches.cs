@@ -21,7 +21,6 @@ using Mewdeko.Modules.Administration.Services;
 using Mewdeko.Modules.Searches.Common;
 using Mewdeko.Modules.Searches.Services;
 using Microsoft.Extensions.Caching.Memory;
-using NekosSharp;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Refit;
@@ -38,7 +37,6 @@ namespace Mewdeko.Modules.Searches;
 public partial class Searches : MewdekoModuleBase<SearchesService>
 {
     private static readonly ConcurrentDictionary<string, string> _cachedShortenedLinks = new();
-    public static NekoClient NekoClient = new("Mewdeko");
     private readonly IMemoryCache _cache;
     private readonly IBotCredentials _creds;
     private readonly IGoogleApiService _google;

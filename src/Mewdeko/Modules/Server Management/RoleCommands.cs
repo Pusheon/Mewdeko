@@ -127,7 +127,7 @@ public partial class ServerManagement
                 }
 
                 secondlist.Add(
-                    $"{i.Mention} - {ctx.Guild.GetUsersAsync().Result.Count(x => x.RoleIds.Contains(i.Id))} Users");
+                    $"{i.Mention} - {(await ctx.Guild.GetUsersAsync()).Count(x => x.RoleIds.Contains(i.Id))} Users");
             }
 
             ;

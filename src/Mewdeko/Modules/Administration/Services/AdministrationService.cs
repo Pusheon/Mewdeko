@@ -47,6 +47,7 @@ public class AdministrationService : INService
     private ConcurrentDictionary<ulong, ulong> MemberRole { get; }
     public ConcurrentHashSet<ulong> DeleteMessagesOnCommand { get; }
     public ConcurrentDictionary<ulong, bool> DeleteMessagesOnCommandChannels { get; }
+    
 
     public static async Task SendHelp(SocketGuild guild)
     {
@@ -194,16 +195,16 @@ public class AdministrationService : INService
             await uow.SaveChangesAsync();
         }
 
-        if (newState == Administration.State.Disable)
+        switch (newState)
         {
-        }
-        else if (newState == Administration.State.Enable)
-        {
-            DeleteMessagesOnCommandChannels[chId] = true;
-        }
-        else
-        {
-            DeleteMessagesOnCommandChannels.TryRemove(chId, out var _);
+            case Administration.State.Disable:
+                break;
+            case Administration.State.Enable:
+                DeleteMessagesOnCommandChannels[chId] = true;
+                break;
+            default:
+                DeleteMessagesOnCommandChannels.TryRemove(chId, out var _);
+                break;
         }
     }
 

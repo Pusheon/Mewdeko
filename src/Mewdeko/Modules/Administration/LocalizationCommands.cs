@@ -34,6 +34,7 @@ public partial class Administration
                 {"nb-NO", "Norsk, Norge"},
                 {"pl-PL", "Polski, Polska"},
                 {"pt-BR", "Português Brasileiro, Brasil"},
+                {"owo", "*pounces"},
                 {"ro-RO", "Română, România"},
                 {"ru-RU", "Русский, Россия"},
                 {"sr-Cyrl-RS", "Српски, Србија"},

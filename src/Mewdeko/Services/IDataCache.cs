@@ -1,4 +1,5 @@
 ﻿using Mewdeko.Database.Models;
+using Mewdeko.Modules.Utility.Common;
 using StackExchange.Redis;
 
 namespace Mewdeko.Services;
@@ -22,15 +23,14 @@ public interface IDataCache
     Task<bool> TryAddHighlightStaggerUser(ulong id);
     List<Highlights> GetHighlightsForGuild(ulong id);
     List<HighlightSettings> GetHighlightSettingsForGuild(ulong id);
-    void CacheSnipes(ulong id, List<SnipeStore> objectList);
-    List<SnipeStore> GetSnipesForGuild(ulong id);
+    Task<List<SnipeStore>> GetSnipesForGuild(ulong id);
     Task SetGuildSettingInt(ulong guildId, string setting, int value);
     Task<int> GetGuildSettingInt(ulong guildId, string setting);
+    Task AddSnipeToCache(ulong id, List<SnipeStore> newAfk);
     Task SetGuildSettingString(ulong guildId, string setting, string value);
     Task<string> GetGuildSettingString(ulong guildId, string setting);
     Task SetGuildSettingBool(ulong guildId, string setting, bool value);
     Task<bool> GetGuildSettingBool(ulong guildId, string setting);
-    Task AddSnipesToCache(ulong id, List<SnipeStore> newSnipes);
     Task<(bool Success, byte[] Data)> TryGetImageDataAsync(Uri key);
     Task SetImageDataAsync(Uri key, byte[] data);
     TimeSpan? AddTimelyClaim(ulong id, int period);

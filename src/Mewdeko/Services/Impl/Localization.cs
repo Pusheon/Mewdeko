@@ -33,12 +33,17 @@ public class Localization : ILocalization
                 CultureInfo cultureInfo = null;
                 try
                 {
-                    if (x.Value == null)
-                        return null;
-                    if (x.Value == "english")
-                        cultureInfo = new CultureInfo("en-US");
-                    else
-                        cultureInfo = new CultureInfo(x.Value);
+                    switch (x.Value)
+                    {
+                        case null:
+                            return null;
+                        case "english":
+                            cultureInfo = new CultureInfo("en-US");
+                            break;
+                        default:
+                            cultureInfo = new CultureInfo(x.Value);
+                            break;
+                    }
                 }
                 catch
                 {

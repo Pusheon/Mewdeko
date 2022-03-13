@@ -96,47 +96,43 @@ public partial class Games : MewdekoModuleBase<GamesService>
         double hot;
         double crazy;
         string advice;
-        if (roll < 500)
+        switch (roll)
         {
-            hot = NextDouble(0, 5);
-            crazy = NextDouble(4, 10);
-            advice = ratings.Nog;
-        }
-        else if (roll < 750)
-        {
-            hot = NextDouble(5, 8);
-            crazy = NextDouble(4, (.6 * hot) + 4);
-            advice = ratings.Fun;
-        }
-        else if (roll < 900)
-        {
-            hot = NextDouble(5, 10);
-            crazy = NextDouble((.61 * hot) + 4, 10);
-            advice = ratings.Dan;
-        }
-        else if (roll < 951)
-        {
-            hot = NextDouble(8, 10);
-            crazy = NextDouble(7, (.6 * hot) + 4);
-            advice = ratings.Dat;
-        }
-        else if (roll < 990)
-        {
-            hot = NextDouble(8, 10);
-            crazy = NextDouble(5, 7);
-            advice = ratings.Wif;
-        }
-        else if (roll < 999)
-        {
-            hot = NextDouble(8, 10);
-            crazy = NextDouble(2, 3.99d);
-            advice = ratings.Tra;
-        }
-        else
-        {
-            hot = NextDouble(8, 10);
-            crazy = NextDouble(4, 5);
-            advice = ratings.Uni;
+            case < 500:
+                hot = NextDouble(0, 5);
+                crazy = NextDouble(4, 10);
+                advice = ratings.Nog;
+                break;
+            case < 750:
+                hot = NextDouble(5, 8);
+                crazy = NextDouble(4, (.6 * hot) + 4);
+                advice = ratings.Fun;
+                break;
+            case < 900:
+                hot = NextDouble(5, 10);
+                crazy = NextDouble((.61 * hot) + 4, 10);
+                advice = ratings.Dan;
+                break;
+            case < 951:
+                hot = NextDouble(8, 10);
+                crazy = NextDouble(7, (.6 * hot) + 4);
+                advice = ratings.Dat;
+                break;
+            case < 990:
+                hot = NextDouble(8, 10);
+                crazy = NextDouble(5, 7);
+                advice = ratings.Wif;
+                break;
+            case < 999:
+                hot = NextDouble(8, 10);
+                crazy = NextDouble(2, 3.99d);
+                advice = ratings.Tra;
+                break;
+            default:
+                hot = NextDouble(8, 10);
+                crazy = NextDouble(4, 5);
+                advice = ratings.Uni;
+                break;
         }
 
         return new GirlRating(_images, _httpFactory, crazy, hot, roll, advice);

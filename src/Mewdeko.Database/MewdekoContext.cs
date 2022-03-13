@@ -27,7 +27,6 @@ public class MewdekoContext : DbContext
 
     public DbSet<GuildConfig> GuildConfigs { get; set; }
     public DbSet<Suggestionse> Suggestions { get; set; }
-    public DbSet<SnipeStore> SnipeStore { get; set; }
     public DbSet<Warning2> Warnings2 { get; set; }
     public DbSet<AFK> Afk { get; set; }
     public DbSet<MultiGreet> MultiGreets { get; set; }
@@ -42,7 +41,7 @@ public class MewdekoContext : DbContext
     public DbSet<Highlights> Highlights { get; set; }
     public DbSet<HighlightSettings> HighlightSettings { get; set; }
     public DbSet<MusicPlaylist> MusicPlaylists { get; set; }
-    public DbSet<CustomReaction> CustomReactions { get; set; }
+    public DbSet<ChatTriggers> ChatTriggers { get; set; }
     public DbSet<CurrencyTransaction> CurrencyTransactions { get; set; }
     public DbSet<MusicPlayerSettings> MusicPlayerSettings { get; set; }
     public DbSet<WaifuUpdate> WaifuUpdates { get; set; }

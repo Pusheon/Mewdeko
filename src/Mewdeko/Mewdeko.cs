@@ -16,7 +16,6 @@ using Mewdeko.Common.TypeReaders;
 using Mewdeko.Database;
 using Mewdeko.Database.Extensions;
 using Mewdeko.Database.Models;
-using Mewdeko.Modules.CustomReactions.Services;
 using Mewdeko.Modules.Gambling.Services;
 using Mewdeko.Modules.Gambling.Services.Impl;
 using Mewdeko.Modules.Nsfw;
@@ -32,8 +31,11 @@ using System.Net.Http;
 using System.Reflection;
 using Lavalink4NET;
 using Lavalink4NET.DiscordNet;
+using Mewdeko.Modules.Chat_Triggers.Services;
 using Mewdeko.Modules.Music.Services;
+using NekosBestApiNet;
 using RunMode = Discord.Commands.RunMode;
+using TypeReader = Discord.Commands.TypeReader;
 
 namespace Mewdeko;
 
@@ -119,6 +121,7 @@ public class Mewdeko
                 .AddSingleton<IPubSub, RedisPubSub>()
                 .AddSingleton<IConfigSeria, YamlSeria>()
                 .AddSingleton<InteractiveService>()
+                .AddSingleton(new NekosBestApi())
                 .AddSingleton<InteractionService>()
                 .AddSingleton<Localization>()
                 .AddSingleton<MusicService>()
@@ -167,7 +170,7 @@ public class Mewdeko
         s.LoadFrom(Assembly.GetAssembly(typeof(CommandHandler))!);
 
         s.AddSingleton<IReadyExecutor>(x => x.GetService<OwnerOnlyService>());
-        s.AddSingleton<IReadyExecutor>(x => x.GetService<CustomReactionsService>());
+        s.AddSingleton<IReadyExecutor>(x => x.GetService<ChatTriggersService>());
         //initialize Services
         Services = s.BuildServiceProvider();
         var commandHandler = Services.GetService<CommandHandler>();
@@ -258,26 +261,30 @@ public class Mewdeko
 
     private Task Client_LeftGuild(SocketGuild arg)
     {
-        try
+        _ = Task.Run(async () =>
         {
-            var chan = Client.Rest.GetChannelAsync(892789588739891250).Result as RestTextChannel;
-            chan.SendErrorAsync($"Left server: {arg.Name} [{arg.Id}]");
-        }
-        catch
-        {
-            //ignored
-        }
+            try
+            {
+                var chan = await Client.Rest.GetChannelAsync(892789588739891250);
+                await ((RestTextChannel)chan).SendErrorAsync($"Left server: {arg.Name} [{arg.Id}]");
+            }
+            catch
+            {
+                //ignored
+            }
 
-        Log.Information("Left server: {0} [{1}]", arg.Name, arg.Id);
+            Log.Information("Left server: {0} [{1}]", arg.Name, arg.Id);
+        });
         return Task.CompletedTask;
     }
 
-    private Task Client_JoinedGuild(SocketGuild arg)
+    private  Task Client_JoinedGuild(SocketGuild arg)
     {
-        arg.DownloadUsersAsync();
-        Log.Information("Joined server: {0} [{1}]", arg.Name, arg.Id);
-        var _ = Task.Run(async () =>
+        _ = Task.Run(async () =>
         {
+            await arg.DownloadUsersAsync();
+            Log.Information("Joined server: {0} [{1}]", arg.Name, arg.Id);
+
             GuildConfig gc;
             await using (var uow = _db.GetDbContext())
             {
@@ -285,20 +292,20 @@ public class Mewdeko
             }
 
             await JoinedGuild.Invoke(gc).ConfigureAwait(false);
-        });
 
-        var chan = Client.Rest.GetChannelAsync(892789588739891250).Result as RestTextChannel;
-        var eb = new EmbedBuilder();
-        eb.WithTitle($"Joined {Format.Bold(arg.Name)}");
-        eb.AddField("Server ID", arg.Id);
-        eb.AddField("Members", arg.MemberCount);
-        eb.AddField("Boosts", arg.PremiumSubscriptionCount);
-        eb.AddField("Owner", $"Name: {arg.Owner}\nID: {arg.OwnerId}");
-        eb.AddField("Text Channels", arg.TextChannels.Count);
-        eb.AddField("Voice Channels", arg.VoiceChannels.Count);
-        eb.WithThumbnailUrl(arg.IconUrl);
-        eb.WithColor(OkColor);
-        chan.SendMessageAsync(embed: eb.Build());
+            var chan = (await Client.Rest.GetChannelAsync(892789588739891250)) as RestTextChannel;
+            var eb = new EmbedBuilder();
+            eb.WithTitle($"Joined {Format.Bold(arg.Name)}");
+            eb.AddField("Server ID", arg.Id);
+            eb.AddField("Members", arg.MemberCount);
+            eb.AddField("Boosts", arg.PremiumSubscriptionCount);
+            eb.AddField("Owner", $"Name: {arg.Owner}\nID: {arg.OwnerId}");
+            eb.AddField("Text Channels", arg.TextChannels.Count);
+            eb.AddField("Voice Channels", arg.VoiceChannels.Count);
+            eb.WithThumbnailUrl(arg.IconUrl);
+            eb.WithColor(OkColor);
+            await chan.SendMessageAsync(embed: eb.Build());
+        });
         return Task.CompletedTask;
     }
 

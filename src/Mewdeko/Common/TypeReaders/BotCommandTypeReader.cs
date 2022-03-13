@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using Discord.Commands;
 using Discord.WebSocket;
-using Mewdeko.Modules.CustomReactions.Services;
+using Mewdeko.Modules.Chat_Triggers.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Mewdeko.Common.TypeReaders;
@@ -46,7 +46,7 @@ public class CommandOrCrTypeReader : MewdekoTypeReader<CommandOrCrInfo>
     {
         input = input.ToUpperInvariant();
 
-        var crs = services.GetService<CustomReactionsService>();
+        var crs = services.GetService<ChatTriggersService>();
 
         Debug.Assert(crs != null, $"{nameof(crs)} != null");
         if (crs.ReactionExists(context.Guild?.Id, input))

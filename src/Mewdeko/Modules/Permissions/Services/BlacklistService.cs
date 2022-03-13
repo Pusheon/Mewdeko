@@ -37,11 +37,13 @@ public sealed class BlacklistService : IEarlyBehavior, INService
             if (guild != null && bl.Type == BlacklistType.Server && bl.ItemId == guild.Id)
                 return Task.FromResult(true);
 
-            if (bl.Type == BlacklistType.Channel && bl.ItemId == usrMsg.Channel.Id)
-                return Task.FromResult(true);
-
-            if (bl.Type == BlacklistType.User && bl.ItemId == usrMsg.Author.Id)
-                return Task.FromResult(true);
+            switch (bl.Type)
+            {
+                case BlacklistType.Channel when bl.ItemId == usrMsg.Channel.Id:
+                    return Task.FromResult(true);
+                case BlacklistType.User when bl.ItemId == usrMsg.Author.Id:
+                    return Task.FromResult(true);
+            }
         }
 
         return Task.FromResult(false);

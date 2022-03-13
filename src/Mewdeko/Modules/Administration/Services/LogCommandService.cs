@@ -868,7 +868,7 @@ public class LogCommandService : INService
                 if (!GuildLogSettings.TryGetValue(guild.Id, out var logSetting)
                     || logSetting.UserBannedId == null)
                     return;
-                var bannedby = guild.GetAuditLogsAsync(actionType: ActionType.Ban).Result.FirstOrDefault();
+                var bannedby = (await guild.GetAuditLogsAsync(actionType: ActionType.Ban)).FirstOrDefault();
                 ITextChannel logChannel;
                 if ((logChannel =
                         await TryGetLogChannel(guild, logSetting, LogType.UserBanned).ConfigureAwait(false)) ==

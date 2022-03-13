@@ -3,6 +3,7 @@ using Mewdeko._Extensions;
 using Newtonsoft.Json;
 using StackExchange.Redis;
 using Mewdeko.Database.Models;
+using Mewdeko.Modules.Utility.Common;
 
 namespace Mewdeko.Services.Impl;
 
@@ -67,10 +68,19 @@ public class RedisCache : IDataCache
         var customers = new RedisDictionary<ulong, List<AFK>>($"{_redisKey}_afk", Redis);
         return customers[id];
     }
+    
 
     public Task AddAfkToCache(ulong id, List<AFK> newAfk)
     {
         var customers = new RedisDictionary<ulong, List<AFK>>($"{_redisKey}_afk", Redis);
+        customers.Remove(id);
+        customers.Add(id, newAfk);
+        return Task.CompletedTask;
+    }
+    
+    public Task AddSnipeToCache(ulong id, List<SnipeStore> newAfk)
+    {
+        var customers = new RedisDictionary<ulong, List<SnipeStore>>($"{id}_{_redisKey}_snipes", Redis);
         customers.Remove(id);
         customers.Add(id, newAfk);
         return Task.CompletedTask;
@@ -131,13 +141,12 @@ public class RedisCache : IDataCache
         customers.Add(id, newHighlight);
         return Task.CompletedTask;
     }
-    
-    public void CacheSnipes(ulong id, List<SnipeStore> objectList) =>
-        new RedisDictionary<ulong, List<SnipeStore>>($"{_redisKey}_snipes", Redis){{id, objectList}};
 
-    public List<SnipeStore> GetSnipesForGuild(ulong id)
+#pragma warning disable CS1998
+    public async Task<List<SnipeStore>> GetSnipesForGuild(ulong id)
+#pragma warning restore CS1998
     {
-        var customers = new RedisDictionary<ulong, List<SnipeStore>>($"{_redisKey}_snipes", Redis);
+        var customers = new RedisDictionary<ulong, List<SnipeStore>>($"{id}_{_redisKey}_snipes", Redis);
         return customers[id];
     }
 
@@ -151,14 +160,6 @@ public class RedisCache : IDataCache
     {
         var customers = new RedisDictionary<ulong, List<HighlightSettings>>($"{_redisKey}_highlightSettings", Redis);
         return customers[id];
-    }
-
-    public Task AddSnipesToCache(ulong id, List<SnipeStore> newAfk)
-    {
-        var customers = new RedisDictionary<ulong, List<SnipeStore>>($"{_redisKey}_snipes", Redis);
-        customers.Remove(id);
-        customers.Add(id, newAfk);
-        return Task.CompletedTask;
     }
 
     public async Task SetImageDataAsync(Uri key, byte[] data)

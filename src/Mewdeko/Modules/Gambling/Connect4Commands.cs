@@ -146,14 +146,20 @@ public partial class Gambling
                 }
 
                 string title;
-                if (result == Connect4Game.Result.CurrentPlayerWon)
-                    title = GetText("connect4_won", Format.Bold(arg.CurrentPlayer.Username),
-                        Format.Bold(arg.OtherPlayer.Username));
-                else if (result == Connect4Game.Result.OtherPlayerWon)
-                    title = GetText("connect4_won", Format.Bold(arg.OtherPlayer.Username),
-                        Format.Bold(arg.CurrentPlayer.Username));
-                else
-                    title = GetText("connect4_draw");
+                switch (result)
+                {
+                    case Connect4Game.Result.CurrentPlayerWon:
+                        title = GetText("connect4_won", Format.Bold(arg.CurrentPlayer.Username),
+                            Format.Bold(arg.OtherPlayer.Username));
+                        break;
+                    case Connect4Game.Result.OtherPlayerWon:
+                        title = GetText("connect4_won", Format.Bold(arg.OtherPlayer.Username),
+                            Format.Bold(arg.CurrentPlayer.Username));
+                        break;
+                    default:
+                        title = GetText("connect4_draw");
+                        break;
+                }
 
                 return msg.ModifyAsync(x => x.Embed = new EmbedBuilder()
                     .WithTitle(title)
@@ -190,12 +196,18 @@ public partial class Gambling
                 {
                     var cur = game.GameState[i + (j * Connect4Game.NUMBER_OF_ROWS) - 1];
 
-                    if (cur == Connect4Game.Field.Empty)
-                        sb.Append("⚫"); //black circle
-                    else if (cur == Connect4Game.Field.P1)
-                        sb.Append("🔴"); //red circle
-                    else
-                        sb.Append("🔵"); //blue circle
+                    switch (cur)
+                    {
+                        case Connect4Game.Field.Empty:
+                            sb.Append("⚫"); //black circle
+                            break;
+                        case Connect4Game.Field.P1:
+                            sb.Append("🔴"); //red circle
+                            break;
+                        default:
+                            sb.Append("🔵"); //blue circle
+                            break;
+                    }
                 }
 
                 sb.AppendLine();

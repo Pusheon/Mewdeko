@@ -134,8 +134,17 @@ public class ChatterBotService : INService
     private static async Task<bool> TryAsk(IChatterBotSession cleverbot, ITextChannel channel, string message)
     {
         await channel.TriggerTypingAsync().ConfigureAwait(false);
-
-        var response = await cleverbot.Think(message).ConfigureAwait(false);
+        string response = String.Empty;
+        try
+        {
+            response = await cleverbot.Think(message).ConfigureAwait(false);
+        }
+        catch
+        {
+            await channel.SendErrorAsync(
+                "Cleverbot is paid and I cannot pay for it right now! If you want to support Mewdeko and reenable this please donate so it'll be available!\nhttps://ko-fi.com/mewdeko\nThis is not a premium feature and never will be!");
+            return false;
+        }
         try
         {
             await channel.SendConfirmAsync(response.SanitizeMentions(true)).ConfigureAwait(false);
