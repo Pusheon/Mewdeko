@@ -36,7 +36,7 @@ public class UtilityService : INService
         Reactchans = bot.AllGuildConfigs
                         .ToDictionary(x => x.GuildId, x => x.ReactChannel)
                         .ToConcurrent();
-        _ = PruneTimer()
+        _ = PruneTimer();
 
     }
 
