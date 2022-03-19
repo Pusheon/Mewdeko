@@ -3,9 +3,8 @@
 public enum ShopEntryType
 {
     Role,
-
-    List
-    //Infinite_List,
+    List,
+    ExclRole
 }
 
 public class ShopEntry : DbEntity, IIndexed
