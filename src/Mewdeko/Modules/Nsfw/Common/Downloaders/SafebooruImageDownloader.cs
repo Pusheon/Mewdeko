@@ -15,9 +15,6 @@ public class SafebooruImageDownloader : ImageDownloader<SafebooruElement>
         var tagString = ImageDownloaderHelper.GetTagString(tags, isExplicit: false);
         var uri = $"https://safebooru.org/index.php?page=dapi&s=post&q=index&limit=200&tags={tagString}&json=1&pid={page}";
         var images = await _http.GetFromJsonAsync<List<SafebooruElement>>(uri, _serializerOptions, cancellationToken: cancel);
-        if (images is null)
-            return new();
-
-        return images;
+        return images ?? new List<SafebooruElement>();
     }
 }

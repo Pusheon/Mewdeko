@@ -276,8 +276,7 @@ public class Giveaways : MewdekoModuleBase<GiveawayService>
             next = await NextMessageAsync(ctx.Channel.Id, ctx.User.Id);
             parsed = Regex.Matches(next, @"(?<=<@&)?[0-9]{17,19}(?=>)?")
                           .Select(m => ulong.Parse(m.Value))
-                          .Select(Context.Guild.GetRole)
-                          .OfType<IRole>().ToList();
+                          .Select(Context.Guild.GetRole).OfType<IRole>().ToList();
             if (parsed.Any()) break;
             await msg.ModifyAsync(x => x.Embed = eb
                                                  .WithDescription("Looks like those roles were incorrect! Please try again!")

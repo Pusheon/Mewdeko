@@ -17,13 +17,11 @@ namespace Mewdeko.Modules.Highlights;
 public class SlashHighlights : MewdekoSlashModuleBase<HighlightsService>
 {
     private readonly InteractiveService _interactivity;
-    private readonly IServiceProvider _svcs;
     private readonly DbService _db;
 
-    public SlashHighlights(InteractiveService interactivity, IServiceProvider svcs, DbService db)
+    public SlashHighlights(InteractiveService interactivity, DbService db)
     {
         _interactivity = interactivity;
-        _svcs = svcs;
         _db = db;
     }
 
