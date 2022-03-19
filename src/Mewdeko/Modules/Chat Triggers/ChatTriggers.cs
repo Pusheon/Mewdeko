@@ -136,7 +136,7 @@ public class ChatTriggers : MewdekoModuleBase<ChatTriggersService>
         async Task<PageBuilder> PageFactory(int page)
         {
             await Task.CompletedTask;
-            return new PageBuilder().WithColor(Mewdeko.OkColor).WithTitle(GetText("custom_reactions"))
+            return new PageBuilder().WithColor(Mewdeko.OkColor).WithTitle(GetText("chat_triggers"))
                                                     .WithDescription(string.Join("\n",
                                                         chatTriggers.OrderBy(cr => cr.Trigger).Skip(page * 20)
                                                                        .Take(20).Select(cr =>
