@@ -49,14 +49,10 @@ public class Nsfw : MewdekoModuleBase<ISearchImagesService>
             return false;
         }
 
-        if (!Cache.Contains(e))
-        {
-            Cache.Add(e);
-            return false;
-        }
+        if (Cache.Contains(e)) return Cache.Contains(e) || true;
+        Cache.Add(e);
+        return false;
 
-        if (Cache.Contains(e)) return true;
-        return true;
     }
 
     private async Task InternalBoobs()
