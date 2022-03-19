@@ -348,7 +348,8 @@ public class Mewdeko
             await interactionService.RegisterCommandsGloballyAsync();
 #endif
 #if DEBUG
-        await interactionService.RegisterCommandsToGuildAsync(900378009188565022);
+        if (Client.CurrentUser.Id is 912712173380304948)
+            await interactionService.RegisterCommandsToGuildAsync(900378009188565022);
 #endif
 
         // start handling messages received in commandhandler

@@ -7,6 +7,12 @@ using Mewdeko.Modules.Starboard.Services;
 
 namespace Mewdeko.Modules.Starboard;
 
+public enum StarboardSetting
+{
+    UseChannelBlacklist,
+    Star,
+    Starcount,
+}
 public class Starboard : MewdekoSubmodule<StarboardService>
 {
     [MewdekoCommand, Usage, Description, Aliases, UserPerm(GuildPermission.ManageChannels)]
@@ -74,5 +80,28 @@ public class Starboard : MewdekoSubmodule<StarboardService>
         }
         await Service.SetStar(ctx.Guild, emote.ToString());
         await ctx.Channel.SendConfirmAsync($"Successfully set the star to {emote}");
+    }
+
+    [MewdekoCommand, Description, Aliases]
+    public async Task StarboardWlMode(bool enabled)
+    {
+        await Service.SetCheckMode(ctx.Guild, enabled);
+        if (enabled)
+        {
+            await ctx.Channel.SendConfirmAsync("Starboard will now use whitelist mode!");
+            return;
+        }
+        await ctx.Channel.SendConfirmAsync("Starboard will now use blacklist mode!");
+    }
+
+    [MewdekoCommand, Description, Aliases]
+    public async Task StarboardChToggle(ITextChannel channel)
+    {
+        if (!await Service.ToggleChannel(ctx.Guild, channel.Id.ToString()))
+        {
+            await ctx.Channel.SendConfirmAsync($"{channel.Mention} Has been added to the whitelist/blacklist (Depnding on what was set in `{Prefix}swm`)");
+            return;
+        }
+        await ctx.Channel.SendConfirmAsync($"{channel.Mention} Has been removed from the whitelist/blacklist (Depnding on what was set in `{Prefix}swm`)");
     }
 }

@@ -249,8 +249,10 @@ public class SearchImageCacher : INService
             {
                 if (maxPage == 0)
                 {
+                    #if DEBUG
                     Log.Information("Tag {0} yields no result on {1}, skipping.", tagStr, type);
-                    return new();
+                    #endif
+                    return new List<ImageData>();
                 }
 
                 page = _rng.Next(0, maxPage);
@@ -264,7 +266,9 @@ public class SearchImageCacher : INService
 
             if (result is null or { Count: 0 })
             {
+                #if DEBUG
                 Log.Information("Tag {0}, page {1} has no result on {2}.", string.Join(", ", tags), page, type.ToString());
+                #endif
                 continue;
             }
 
@@ -293,8 +297,9 @@ public class SearchImageCacher : INService
     {
         try
         {
+            #if DEBUG
             Log.Information("Downloading from {0} (page {1})...", type, page);
-
+            #endif
             using var http = _httpFactory.CreateClient();
             var downloader = GetImageDownloader(type, http);
 
@@ -313,12 +318,14 @@ public class SearchImageCacher : INService
         }
         catch (Exception ex)
         {
+            #if DEBUG
             Log.Error(ex, "Error downloading an image:\nTags: {0}\nType: {1}\nPage: {2}\nMessage: {3}",
                 string.Join(", ", tags),
                 type,
                 page,
                 ex.Message);
-            return new();
+            #endif
+            return new List<ImageData>();
         }
     }
 }

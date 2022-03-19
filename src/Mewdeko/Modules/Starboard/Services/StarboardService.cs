@@ -40,6 +40,9 @@ public class StarboardService : INService
         CheckChannels = bot.AllGuildConfigs
                            .ToDictionary(x => x.GuildId, x => x.StarboardCheckChannels)
                            .ToConcurrent();
+        AllowBots =  bot.AllGuildConfigs
+                        .ToDictionary(x => x.GuildId, x => x.StarboardAllowBots)
+                        .ToConcurrent();
         _ = CacheStarboardPosts();
 
 
@@ -52,6 +55,7 @@ public class StarboardService : INService
     private ConcurrentDictionary<ulong, string> StarboardStars { get; }
     private ConcurrentDictionary<ulong, string> CheckChannels { get; set; }
     private ConcurrentDictionary<ulong, bool> UseBlacklist { get; set; }
+    private ConcurrentDictionary<ulong, bool> AllowBots { get; set; }
 
     private List<StarboardPosts> starboardPosts;
 
@@ -119,6 +123,17 @@ public class StarboardService : INService
 
         UseBlacklist.AddOrUpdate(guild.Id, checkmode, (_, _) => checkmode);
     }
+    public async Task SetALlowBots(IGuild guild, bool allowbots)
+    {
+        await using (var uow = _db.GetDbContext())
+        {
+            var gc = uow.ForGuildId(guild.Id, set => set);
+            gc.StarboardAllowBots = true;
+            await uow.SaveChangesAsync();
+        }
+
+        AllowBots.AddOrUpdate(guild.Id, allowbots, (_, _) => allowbots);
+    }
     public async Task<bool> ToggleChannel(IGuild guild, string id)
     {
         var channels = GetCheckedChannels(guild.Id).Split(" ").ToList();
@@ -143,7 +158,29 @@ public class StarboardService : INService
         CheckChannels.AddOrUpdate(guild.Id, joinedchannels1, (_, _) => joinedchannels1);
         return true;
     }
+    public async Task SetStar(IGuild guild, string emote)
+    {
+        await using (var uow = _db.GetDbContext())
+        {
+            var gc = uow.ForGuildId(guild.Id, set => set);
+            gc.Star2 = emote;
+            await uow.SaveChangesAsync();
+        }
 
+        StarboardStars.AddOrUpdate(guild.Id, emote, (_, _) => emote);
+    }
+    
+    public async Task SetRepostThreshold(IGuild guild, int threshold)
+    {
+        await using (var uow = _db.GetDbContext())
+        {
+            var gc = uow.ForGuildId(guild.Id, set => set);
+            gc.RepostThreshold = threshold;
+            await uow.SaveChangesAsync();
+        }
+
+        RepostThresholdDictionary.AddOrUpdate(guild.Id, threshold, (_, _) => threshold);
+    }
     public async Task SetStarCount(IGuild guild, int num)
     {
         await using (var uow = _db.GetDbContext())
@@ -185,29 +222,6 @@ public class StarboardService : INService
 
         return hold;
     }
-    public async Task SetStar(IGuild guild, string emote)
-    {
-        await using (var uow = _db.GetDbContext())
-        {
-            var gc = uow.ForGuildId(guild.Id, set => set);
-            gc.Star2 = emote;
-            await uow.SaveChangesAsync();
-        }
-
-        StarboardStars.AddOrUpdate(guild.Id, emote, (_, _) => emote);
-    }
-    
-    public async Task SetRepostThreshold(IGuild guild, int threshold)
-    {
-        await using (var uow = _db.GetDbContext())
-        {
-            var gc = uow.ForGuildId(guild.Id, set => set);
-            gc.RepostThreshold = threshold;
-            await uow.SaveChangesAsync();
-        }
-
-        RepostThresholdDictionary.AddOrUpdate(guild.Id, threshold, (_, _) => threshold);
-    }
 
     public string GetStar(ulong? id)
     {
@@ -224,6 +238,13 @@ public class StarboardService : INService
 
         return starboardChannel;
     }
+    private bool GetAllowBots(ulong? id)
+    {
+        if (id == null || !AllowBots.TryGetValue(id.Value, out var allowBots))
+            return true;
+
+        return allowBots;
+    }
 
     private async Task OnReactionAddedAsync(Cacheable<IUserMessage, ulong> message,
         Cacheable<IMessageChannel, ulong> channel,
@@ -231,11 +252,17 @@ public class StarboardService : INService
     {
         
         if (!reaction.User.IsSpecified
-            || reaction.User.Value.IsBot 
             || !channel.HasValue 
             || channel.Value is not ITextChannel textChannel 
             || GetStarCount(textChannel.GuildId) == 0)
             return;
+        
+        if (!GetAllowBots(textChannel.GuildId) && reaction.User.Value.IsBot)
+            return;
+        
+        if (!message.HasValue)
+            await message.DownloadAsync();
+        
         
         var star = GetStar(textChannel.GuildId).ToIEmote();
         
@@ -255,16 +282,21 @@ public class StarboardService : INService
         if (starboardChannel == null)
             return;
         var gUser = await textChannel.Guild.GetUserAsync(_client.CurrentUser.Id);
+        IUserMessage newMessage;
+        if (!message.HasValue)
+            newMessage = await message.GetOrDownloadAsync();
+        else
+            newMessage = message.Value;
         
         var checkedChannels = GetCheckedChannels(starboardChannel.GuildId);
-        if (GetCheckMode(gUser.GuildId))
+        if (!GetCheckMode(gUser.GuildId))
         {
-            if (checkedChannels.Split(" ").Contains(message.Value.Channel.Id.ToString()))
+            if (checkedChannels.Split(" ").Contains(newMessage.Channel.Id.ToString()))
                 return;
         }
         else
         {
-            if (!checkedChannels.Split(" ").Contains(message.Value.Channel.ToString()))
+            if (!checkedChannels.Split(" ").Contains(newMessage.Channel.Id.ToString()))
                 return;
         }
 
@@ -274,12 +306,18 @@ public class StarboardService : INService
         if (!botPerms.Has(ChannelPermission.SendMessages))
             return;
         
-        IUserMessage newMessage;
-        if (!message.HasValue)
-            newMessage = await message.GetOrDownloadAsync();
-        else
-            newMessage = message.Value;
-
+        string content = null;
+        var e = newMessage.Embeds.Select(x => x.Description)?.FirstOrDefault();
+        if (GetAllowBots(textChannel.GuildId) && newMessage.Author.IsBot)
+        {
+            if (newMessage.Content is null)
+            {
+                
+                if (newMessage.Embeds.Select(x => x.Description)?.FirstOrDefault() is null)
+                    return;
+                content = newMessage.Embeds.Select(x => x.Description)?.FirstOrDefault();
+            }
+        }
         var emoteCount = await newMessage.GetReactionUsersAsync(star, int.MaxValue).FlattenAsync();
         var count = emoteCount.Where(x => !x.IsBot);
         var enumerable = count as IUser[] ?? count.ToArray();
@@ -297,7 +335,7 @@ public class StarboardService : INService
                 {
                     var post2 = post as IUserMessage;
                     var eb1 = new EmbedBuilder().WithOkColor().WithAuthor(newMessage.Author)
-                                               .WithDescription(newMessage.Content)
+                                               .WithDescription(content)
                                                .AddField("**Source**", $"[Jump!]({newMessage.GetJumpUrl()})")
                                                .WithFooter(message.Id.ToString())
                                                .WithTimestamp(newMessage.Timestamp);
@@ -324,7 +362,7 @@ public class StarboardService : INService
                             // ignored
                         }
                     var eb2 = new EmbedBuilder().WithOkColor().WithAuthor(newMessage.Author)
-                                               .WithDescription(newMessage.Content)
+                                               .WithDescription(content)
                                                .AddField("**Source**", $"[Jump!]({newMessage.GetJumpUrl()})")
                                                .WithFooter(message.Id.ToString())
                                                .WithTimestamp(newMessage.Timestamp);
@@ -341,9 +379,10 @@ public class StarboardService : INService
                 var tryGetOldPost = await starboardChannel.GetMessageAsync(maybePost.PostId);
                 if (tryGetOldPost is not null)
                 {
+                    
                     var toModify = tryGetOldPost as IUserMessage;
                     var eb1 = new EmbedBuilder().WithOkColor().WithAuthor(newMessage.Author)
-                                                .WithDescription(newMessage.Content)
+                                                .WithDescription(content)
                                                 .AddField("**Source**", $"[Jump!]({newMessage.GetJumpUrl()})")
                                                 .WithFooter(message.Id.ToString())
                                                 .WithTimestamp(newMessage.Timestamp);
@@ -359,7 +398,7 @@ public class StarboardService : INService
                 else
                 {
                     var eb2 = new EmbedBuilder().WithOkColor().WithAuthor(newMessage.Author)
-                                               .WithDescription(newMessage.Content)
+                                               .WithDescription(content)
                                                .AddField("**Source**", $"[Jump!]({newMessage.GetJumpUrl()})")
                                                .WithFooter(message.Id.ToString())
                                                .WithTimestamp(newMessage.Timestamp);
@@ -374,7 +413,7 @@ public class StarboardService : INService
         else
         {
             var eb = new EmbedBuilder().WithOkColor().WithAuthor(newMessage.Author)
-                                       .WithDescription(newMessage.Content)
+                                       .WithDescription(content)
                                        .AddField("**Source**", $"[Jump!]({newMessage.GetJumpUrl()})")
                                        .WithFooter(message.Id.ToString())
                                        .WithTimestamp(newMessage.Timestamp);
@@ -418,17 +457,40 @@ public class StarboardService : INService
         
         var gUser = await textChannel.Guild.GetUserAsync(_client.CurrentUser.Id);
         
-        var botPerms = gUser.GetPermissions(starboardChannel);
-        
-        if (!botPerms.Has(ChannelPermission.SendMessages))
-            return;
-        
         IUserMessage newMessage;
         if (!message.HasValue)
             newMessage = await message.GetOrDownloadAsync();
         else
             newMessage = message.Value;
-
+        
+        var checkedChannels = GetCheckedChannels(starboardChannel.GuildId);
+        if (!GetCheckMode(gUser.GuildId))
+        {
+            if (checkedChannels.Split(" ").Contains(newMessage.Channel.Id.ToString()))
+                return;
+        }
+        else
+        {
+            if (!checkedChannels.Split(" ").Contains(newMessage.Channel.Id.ToString()))
+                return;
+        }
+        
+        var botPerms = gUser.GetPermissions(starboardChannel);
+        
+        if (!botPerms.Has(ChannelPermission.SendMessages))
+            return;
+        
+        string content = null;
+        if (GetAllowBots(textChannel.GuildId) && newMessage.Author.IsBot)
+        {
+            if (newMessage.Content is null)
+            {
+                var e = newMessage.Embeds.Select(x => x.Description)?.FirstOrDefault();
+                if (newMessage.Embeds.Select(x => x.Description)?.FirstOrDefault() is null)
+                    return;
+                content = newMessage.Embeds.Select(x => x.Description)?.FirstOrDefault();
+            }
+        }
         var emoteCount = await newMessage.GetReactionUsersAsync(star, int.MaxValue).FlattenAsync();
         var maybePost = starboardPosts.FirstOrDefault(x => x.MessageId == newMessage.Id);
         if (maybePost == null)
@@ -458,7 +520,7 @@ public class StarboardService : INService
                 {
                     var post2 = post as IUserMessage;
                     var eb1 = new EmbedBuilder().WithOkColor().WithAuthor(newMessage.Author)
-                                               .WithDescription(newMessage.Content)
+                                               .WithDescription(content)
                                                .AddField("**Source**", $"[Jump!]({newMessage.GetJumpUrl()})")
                                                .WithFooter(message.Id.ToString())
                                                .WithTimestamp(newMessage.Timestamp);
@@ -485,7 +547,7 @@ public class StarboardService : INService
                             // ignored
                         }
                     var eb2 = new EmbedBuilder().WithOkColor().WithAuthor(newMessage.Author)
-                                               .WithDescription(newMessage.Content)
+                                               .WithDescription(content)
                                                .AddField("**Source**", $"[Jump!]({newMessage.GetJumpUrl()})")
                                                .WithFooter(message.Id.ToString())
                                                .WithTimestamp(newMessage.Timestamp);
@@ -504,7 +566,7 @@ public class StarboardService : INService
                 {
                     var toModify = tryGetOldPost as IUserMessage;
                     var eb1 = new EmbedBuilder().WithOkColor().WithAuthor(newMessage.Author)
-                                                .WithDescription(newMessage.Content)
+                                                .WithDescription(content)
                                                 .AddField("**Source**", $"[Jump!]({newMessage.GetJumpUrl()})")
                                                 .WithFooter(message.Id.ToString()).WithTimestamp(newMessage.Timestamp);
                     if (newMessage.Attachments.Any())
@@ -519,7 +581,7 @@ public class StarboardService : INService
                 else
                 {
                     var eb2 = new EmbedBuilder().WithOkColor().WithAuthor(newMessage.Author)
-                                                .WithDescription(newMessage.Content)
+                                                .WithDescription(content)
                                                 .AddField("**Source**", $"[Jump!]({newMessage.GetJumpUrl()})")
                                                 .WithFooter(message.Id.ToString()).WithTimestamp(newMessage.Timestamp);
                     if (newMessage.Attachments.Any())
