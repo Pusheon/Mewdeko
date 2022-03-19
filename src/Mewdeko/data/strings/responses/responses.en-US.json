@@ -800,6 +800,7 @@
     "shop_item_add": "Shop item added",
     "shop_none": "No shop items found on this page.",
     "shop_role": "You will get {0} role.",
+    "shop_exclrole": "You will get {0} role. Any other exclusive roles will need to be bought again and be removed.",
     "type": "Type",
     "clpa_next_update": "Next update in {0}",
     "gvc_disabled": "Game Voice Channel feature has been disabled on this server.",
