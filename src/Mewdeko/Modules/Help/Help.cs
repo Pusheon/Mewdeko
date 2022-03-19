@@ -115,13 +115,12 @@ public class Help : MewdekoModuleBase<HelpService>
             $"\n>  `{Prefix}cmds Starboard`",
             true);
         embed.AddField("_ _",
-            $">  `{Prefix}cmds Nsfw`" +
             $"\n>  `{Prefix}cmds Music`" +
             $"\n>  `{Prefix}cmds Gambling`" +
             $"\n>  `{Prefix}cmds Searches`" +
             $"\n>  `{Prefix}cmds Games`" +
             $"\n>  `{Prefix}cmds Help`" +
-            $"\n>  `{Prefix}cmds Custom Reactions`" + 
+            $"\n>  `{Prefix}cmds ChatTriggers`" + 
             $"\n>  `{Prefix}cmds Giveaways`" + 
             $"\n>  `{Prefix}cmds MultiGreet`" +
             $"\n> `{Prefix}cmds Highlights`",
@@ -215,7 +214,7 @@ public class Help : MewdekoModuleBase<HelpService>
                 .AddField(groups.Select(x => x.ElementAt(page).Key).FirstOrDefault(),
                     $"```css\n{string.Join("\n", transformed)}\n```")
                 .WithDescription(
-                    $"<:Nekoha_Hmm:866320787865731093>: Your current prefix is {Format.Code(Prefix)}"
+                    $"🔹: Your current prefix is {Format.Code(Prefix)}"
                     + $"\n✅: You can use this command.\n❌: You cannot use this command."
                     + $"\nDo `{Prefix}h commandname` to see info on that command")
                 .WithOkColor();

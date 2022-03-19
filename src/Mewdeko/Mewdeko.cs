@@ -18,7 +18,6 @@ using Mewdeko.Database.Extensions;
 using Mewdeko.Database.Models;
 using Mewdeko.Modules.Gambling.Services;
 using Mewdeko.Modules.Gambling.Services.Impl;
-using Mewdeko.Modules.Nsfw;
 using Mewdeko.Modules.OwnerOnly.Services;
 using Mewdeko.Services.Impl;
 using Microsoft.Extensions.DependencyInjection;
@@ -139,8 +138,7 @@ public class Mewdeko
                     RestUri = "http://127.0.0.1:2333",
                     DisconnectOnStop = false,
                 })
-                .AddSingleton<IShopService, ShopService>()
-                .AddScoped<ISearchImagesService, SearchImagesService>();
+                .AddSingleton<IShopService, ShopService>();
 
         s.AddHttpClient();
         s.AddHttpClient("memelist").ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
