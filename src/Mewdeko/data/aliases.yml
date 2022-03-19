@@ -512,7 +512,6 @@ permrole:
   - pr
 verbose:
   - verbose
-  - v
 srvrmdl:
   - srvrmdl
   - sm
