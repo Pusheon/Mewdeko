@@ -47,7 +47,7 @@ public class UtilityService : INService
     private ConcurrentDictionary<ulong, ulong> Reactchans { get; }
     public async Task PruneTimer()
     {
-        using var timer = new PeriodicTimer(TimeSpan.FromMinutes(10));
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(30));
         while (await timer.WaitForNextTickAsync())
         {
             var guild = _client.GetGuild(708154079695601685);
