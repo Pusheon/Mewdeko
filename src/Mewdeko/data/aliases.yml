@@ -620,8 +620,8 @@ wheeloffortune:
   - wheeloffortune
   - wheel
 leaderboard:
-  - leaderboard
-  - lb
+  - gameleaderboard
+  - glb
 trivia:
   - trivia
   - t
@@ -1234,6 +1234,8 @@ nsfwtagblacklist:
 experience:
   - experience
   - xp
+  - rank
+  - level
 xptemplatereload:
   - xptempreload
   - xptr
@@ -1262,6 +1264,7 @@ xpcurrencyreward:
 xpleaderboard:
   - xpleaderboard
   - xplb
+  - lb
 xpgloballeaderboard:
   - xpgleaderboard
   - xpglb

@@ -1780,7 +1780,7 @@ wheeloffortune:
     whole number.
   args:
     - '10'
-leaderboard:
+gameleaderboard:
   desc: Displays the bot's currency leaderboard.
   args:
     - ''

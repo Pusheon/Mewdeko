@@ -260,19 +260,6 @@ public class StarboardService : INService, IReadyExecutor
         if (starboardChannel == null)
             return;
         var gUser = await textChannel.Guild.GetUserAsync(_client.CurrentUser.Id);
-        
-        var checkedChannels = GetCheckedChannels(starboardChannel.GuildId);
-        if (GetCheckMode(gUser.GuildId))
-        {
-            if (checkedChannels.Split(" ").Contains(message.Value.Channel.Id.ToString()))
-                return;
-        }
-        else
-        {
-            if (!checkedChannels.Split(" ").Contains(message.Value.Channel.ToString()))
-                return;
-        }
-
 
         var botPerms = gUser.GetPermissions(starboardChannel);
         
