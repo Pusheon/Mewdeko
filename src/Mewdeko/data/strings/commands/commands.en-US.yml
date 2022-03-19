@@ -8,6 +8,10 @@ snipelist:
   args:
     - ""
     - "20"
+verify:
+  desc: "Used to verify new members when they pass."
+  args:
+    - "@user"
 highlights:
   desc: |-
     - `add` Adds a word to your highlights
