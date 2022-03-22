@@ -24,7 +24,6 @@ using Mewdeko.Modules.Chat_Triggers.Services;
 using Mewdeko.Modules.Gambling.Services;
 using Mewdeko.Modules.Gambling.Services.Impl;
 using Mewdeko.Modules.Music.Services;
-using Mewdeko.Modules.Nsfw;
 using Mewdeko.Modules.OwnerOnly.Services;
 using Mewdeko.Services.Impl;
 using Microsoft.Extensions.DependencyInjection;
@@ -144,8 +143,7 @@ public class Mewdeko
                     DisconnectOnStop = false,
                     ResumeKey = "88383874973209rfjb="
                 })
-                .AddSingleton<IShopService, ShopService>()
-                .AddScoped<ISearchImagesService, SearchImagesService>();
+                .AddSingleton<IShopService, ShopService>();
 
         s.AddHttpClient();
         s.AddHttpClient("memelist").ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler

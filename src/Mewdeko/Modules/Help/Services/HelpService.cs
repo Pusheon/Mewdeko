@@ -39,7 +39,6 @@ public class HelpService : ILateExecutor, INService
         _dpos = dpos;
         _bss = bss;
         _client.MessageReceived += HandlePing;
-        _client.JoinedGuild += HandleJoin;
         Builder = new ComponentBuilder().WithSelectMenu("helpselect",
             new List<SelectMenuOptionBuilder>
             {
@@ -54,7 +53,6 @@ public class HelpService : ILateExecutor, INService
                 new SelectMenuOptionBuilder().WithLabel("Highlights").WithDescription("Shows Highlights Commands").WithValue("highlights"),
                 new SelectMenuOptionBuilder().WithLabel("Moderation").WithDescription("Shows Moderation Commands").WithValue("mod"),
                 new SelectMenuOptionBuilder().WithLabel("MultiGreets").WithDescription("Shows MultiGreet Commands").WithValue("multigreets"),
-                new SelectMenuOptionBuilder().WithLabel("NSFW").WithDescription("Shows NSFW Commands").WithValue("nsfw"),
                 new SelectMenuOptionBuilder().WithLabel("Permissions").WithDescription("Shows Permissions Commands").WithValue("permissions"),
                 new SelectMenuOptionBuilder().WithLabel("RoleGreets").WithDescription("Shows RoleGreets commands").WithValue("rolegreets"),
                 new SelectMenuOptionBuilder().WithLabel("Searches").WithDescription("Shows Searches Commands").WithValue("searches"),
@@ -127,27 +125,6 @@ public class HelpService : ILateExecutor, INService
                                                       .WithIconUrl(_client.CurrentUser.RealAvatarUrl().ToString()));
                 await chan.SendMessageAsync(embed: eb.Build());
             }
-    }
-    
-    public async Task HandleJoin(SocketGuild guild)
-    {
-        if (_bot.AllGuildConfigs.TryGetValue(guild.Id, out _))
-            return;
-        
-        var e = guild.DefaultChannel;
-        var eb = new EmbedBuilder
-        {
-            Description =
-                "Hi, thanks for inviting Mewdeko! I hope you like the bot, and discover all its features! The default prefix is `.` This can be changed with the prefix command."
-        };
-        eb.AddField("How to look for commands",
-            "1) Use the .cmds command to see all the categories\n2) use .cmds with the category name to glance at what commands it has. ex: `.cmds mod`\n3) Use .h with a command name to view its help. ex: `.h purge`");
-        eb.AddField("Have any questions, or need my invite link?",
-            "Support Server: https://discord.gg/6n3aa9Xapf \nInvite Link: https://mewdeko.tech/invite");
-        eb.WithThumbnailUrl(
-            "https://media.discordapp.net/attachments/866308739334406174/869220206101282896/nekoha_shizuku_original_drawn_by_amashiro_natsuki__df72ed2f8d84038f83c4d1128969d407.png");
-        eb.WithOkColor();
-        await e.SendMessageAsync(embed: eb.Build());
     }
 
     public EmbedBuilder GetCommandHelp(CommandInfo com, IGuild guild)

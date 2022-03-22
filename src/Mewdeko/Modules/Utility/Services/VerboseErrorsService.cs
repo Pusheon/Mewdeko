@@ -53,8 +53,7 @@ public class VerboseErrorsService : INService, IUnloadableService
                     string.Join("\n", cmd.RealRemarksArr(_strings, channel.Guild.Id, _ch.GetPrefix(channel.Guild))))
                 .WithErrorColor();
             
-            await channel.SendMessageAsync(embed: embed.Build(),  components: new ComponentBuilder()
-                                                                              .WithButton(label: "Support Server", style: ButtonStyle.Link, url: "https://discord.gg/wB9FBMreRk").Build()).ConfigureAwait(false);
+            await channel.SendMessageAsync(embed: embed.Build()).ConfigureAwait(false);
         }
         catch
         {
