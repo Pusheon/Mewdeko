@@ -214,6 +214,11 @@ public class StarboardService : INService, IReadyExecutor
             || channel.Value is not ITextChannel textChannel 
             || GetStarCount(textChannel.GuildId) == 0)
             return;
+        IUserMessage newMessage;
+        if (!message.HasValue)
+            newMessage = await message.GetOrDownloadAsync();
+        else
+            newMessage = message.Value;
         
         var star = GetStar(textChannel.GuildId).ToIEmote();
         
@@ -237,12 +242,12 @@ public class StarboardService : INService, IReadyExecutor
         var checkedChannels = GetCheckedChannels(starboardChannel.GuildId);
         if (GetCheckMode(gUser.GuildId))
         {
-            if (checkedChannels.Split(" ").Contains(message.Value.Channel.Id.ToString()))
+            if (checkedChannels.Split(" ").Contains(newMessage.Channel.Id.ToString()))
                 return;
         }
         else
         {
-            if (!checkedChannels.Split(" ").Contains(message.Value.Channel.ToString()))
+            if (!checkedChannels.Split(" ").Contains(newMessage.Channel.ToString()))
                 return;
         }
 
@@ -253,11 +258,6 @@ public class StarboardService : INService, IReadyExecutor
             return;
         string content;
         string imageurl;
-        IUserMessage newMessage;
-        if (!message.HasValue)
-            newMessage = await message.GetOrDownloadAsync();
-        else
-            newMessage = message.Value;
         switch (newMessage.Author.IsBot)
         {
             case true when !GetAllowBots(textChannel.GuildId):
@@ -392,9 +392,12 @@ public class StarboardService : INService, IReadyExecutor
             || channel.Value is not ITextChannel textChannel 
             || GetStarCount(textChannel.GuildId) == 0)
             return;
-
+        IUserMessage newMessage;
+        if (!message.HasValue)
+            newMessage = await message.GetOrDownloadAsync();
+        else
+            newMessage = message.Value;
         var star = GetStar(textChannel.GuildId).ToIEmote();
-        
         if (star.Name == null)
             return;
         
@@ -410,9 +413,18 @@ public class StarboardService : INService, IReadyExecutor
 
         if (starboardChannel == null)
             return;
-        
+        var checkedChannels = GetCheckedChannels(starboardChannel.GuildId);
         var gUser = await textChannel.Guild.GetUserAsync(_client.CurrentUser.Id);
-        
+        if (GetCheckMode(gUser.GuildId))
+        {
+            if (checkedChannels.Split(" ").Contains(newMessage.Channel.Id.ToString()))
+                return;
+        }
+        else
+        {
+            if (!checkedChannels.Split(" ").Contains(newMessage.Channel.ToString()))
+                return;
+        }
         var botPerms = gUser.GetPermissions(starboardChannel);
         
         if (!botPerms.Has(ChannelPermission.SendMessages))
@@ -420,11 +432,6 @@ public class StarboardService : INService, IReadyExecutor
         
         string content;
         string imageurl;
-        IUserMessage newMessage;
-        if (!message.HasValue)
-            newMessage = await message.GetOrDownloadAsync();
-        else
-            newMessage = message.Value;
         switch (newMessage.Author.IsBot)
         {
             case true when !GetAllowBots(textChannel.GuildId):
