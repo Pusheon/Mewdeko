@@ -108,7 +108,8 @@ public class ChatterBotService : INService
             return null;
         if (GetCleverbotChannel(channel.Guild.Id) == 0)
             return null;
-
+        if (GetCleverbotChannel(channel.Guild.Id) != channel.Id)
+            return null;
         if (!CleverbotUsers.TryGetValue(msg.Author.Id, out var lazyCleverbot))
         {
             CleverbotUsers.TryAdd(msg.Author.Id, new Lazy<IChatterBotSession>(CreateSession, true));
