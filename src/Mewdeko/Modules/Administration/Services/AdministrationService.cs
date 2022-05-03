@@ -1,8 +1,15 @@
-﻿using Discord.Commands;
+﻿using Discord;
+using Discord.Commands;
+using Discord.WebSocket;
+using Mewdeko.Common;
 using Mewdeko.Common.Collections;
+using Mewdeko.Common.Replacements;
+using Mewdeko.Database;
+using Mewdeko.Database.Extensions;
+using Mewdeko.Database.Models;
+using Mewdeko.Extensions;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Concurrent;
-using System.Threading.Tasks;
 
 namespace Mewdeko.Modules.Administration.Services;
 
@@ -31,16 +38,83 @@ public class AdministrationService : INService
             .ToConcurrent());
         cmdHandler.CommandExecuted += DelMsgOnCmd_Handler;
     }
-
+    
     public ConcurrentHashSet<ulong> DeleteMessagesOnCommand { get; }
     public ConcurrentDictionary<ulong, bool> DeleteMessagesOnCommandChannels { get; }
+    private readonly ConcurrentDictionary<ulong, int> _messagesSent = new();
+    private readonly ConcurrentDictionary<ulong, int> _messagesSent1 = new();
+    
+    
+    private async Task GrantKarutaRole(SocketMessage arg)
+
+    {
+
+        if (arg.Channel is not ITextChannel channel)
+
+            return;
+
+        if (channel.Id != 940654772070019132 && channel.Id != 809636962599829574)
+
+            return;
+
+        var gUser = arg.Author as SocketGuildUser;
+
+        if (gUser.Roles.Select(x => x.Id).Contains<ulong>(940669747282980954))
+
+            return;
+
+        if (!_messagesSent.TryGetValue(gUser.Id, out var amount) || amount < 2)
+
+            _messagesSent.AddOrUpdate(gUser.Id, amount++, (_, _) => amount++);
+
+        else
+
+        {
+
+            await gUser.AddRoleAsync(940669747282980954);
+
+            _messagesSent.TryRemove(gUser.Id, out _);
+
+        }
+
+    }
+
+    private async Task GrantKarutaRole1(SocketMessage arg)
+
+    {
+
+        if (arg.Channel is not ITextChannel channel)
+            return;
+
+        if (channel.Id is not 952697336570728498 or 954828857985351740 or 952698660179808297)
+            return;
+
+        var gUser = arg.Author as SocketGuildUser;
+
+        if (gUser.Roles.Select(x => x.Id).Contains<ulong>(952773926730203146))
+            return;
+
+        if (!_messagesSent1.TryGetValue(gUser.Id, out var amount) || amount < 3)
+
+            _messagesSent1.AddOrUpdate(gUser.Id, amount++, (_, _) => amount++);
+
+        else
+
+        {
+
+            await gUser.AddRoleAsync(952773926730203146);
+
+            _messagesSent1.TryRemove(gUser.Id, out _);
+
+        }
+    }
 
     public async Task StaffRoleSet(IGuild guild, ulong role)
     {
         await using var uow = _db.GetDbContext();
         var gc = uow.ForGuildId(guild.Id, set => set);
         gc.StaffRole = role;
-        await uow.SaveChangesAsync().ConfigureAwait(false);
+        await uow.SaveChangesAsync().ConfigureAwait(false);;
         _bot.UpdateGuildConfig(guild.Id, gc);
     }
 
@@ -68,7 +142,7 @@ public class AdministrationService : INService
 
     private Task DelMsgOnCmd_Handler(IUserMessage msg, CommandInfo cmd)
     {
-        var _ = Task.Factory.StartNew(async () =>
+        var _ = Task.Run(async () =>
         {
             if (msg.Channel is SocketTextChannel channel)
             {
@@ -104,7 +178,7 @@ public class AdministrationService : INService
             }
 
             //wat ?!
-        }, TaskCreationOptions.LongRunning);
+        });
         return Task.CompletedTask;
     }
 
@@ -166,10 +240,9 @@ public class AdministrationService : INService
 
     public static async Task DeafenUsers(bool value, params IGuildUser[] users)
     {
-        if (users.Length == 0)
+        if (!users.Any())
             return;
         foreach (var u in users)
-        {
             try
             {
                 await u.ModifyAsync(usr => usr.Deaf = value).ConfigureAwait(false);
@@ -178,7 +251,6 @@ public class AdministrationService : INService
             {
                 // ignored
             }
-        }
     }
 
     public static async Task EditMessage(ICommandContext context, ITextChannel chanl, ulong messageId, string text)
@@ -192,13 +264,12 @@ public class AdministrationService : INService
             .WithDefault(context)
             .Build();
 
-        if (SmartEmbed.TryParse(rep.Replace(text), context.Guild?.Id, out var embed, out var plainText, out var components))
+        if (SmartEmbed.TryParse(rep.Replace(text), out var embed, out var plainText))
         {
             await umsg.ModifyAsync(x =>
             {
                 x.Embed = embed?.Build();
                 x.Content = plainText?.SanitizeMentions();
-                x.Components = components.Build();
             }).ConfigureAwait(false);
         }
         else
@@ -207,7 +278,6 @@ public class AdministrationService : INService
             {
                 x.Content = text.SanitizeMentions();
                 x.Embed = null;
-                x.Components = null;
             }).ConfigureAwait(false);
         }
     }
