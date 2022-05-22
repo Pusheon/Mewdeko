@@ -1,9 +1,11 @@
-﻿using Discord;
+﻿using AngleSharp.Dom;
+using Discord;
 using Discord.WebSocket;
 using Mewdeko.Database.Extensions;
 using Mewdeko.Extensions;
 using Mewdeko.Modules.Utility.Common;
 using System.Text.RegularExpressions;
+using System.Threading;
 using VirusTotalNet;
 using VirusTotalNet.Results;
 
@@ -27,6 +29,7 @@ public class UtilityService : INService
         _db = db;
         _bot = bot;
         _cache = cache;
+        _ = Task.Run(async () => await MessageDeleter());
     }
 
     public async Task<List<SnipeStore>> GetSnipes(ulong guildId)
@@ -38,6 +41,19 @@ public class UtilityService : INService
     public ulong GetReactChans(ulong? id)
         => _bot.GetGuildConfig(id.Value).ReactChannel;
 
+    public async Task MessageDeleter()
+    {
+        var timer = new PeriodicTimer(TimeSpan.FromMinutes(10));
+        while (await timer.WaitForNextTickAsync())
+        {
+            var channel = await _client.GetChannelAsync(946933865866493983) as ITextChannel;
+            var messages = await channel.GetMessagesAsync(SnowflakeUtils.ToSnowflake(DateTimeOffset.UtcNow.AddMinutes(10)), Direction.After, 500).FlattenAsync();
+            if (!messages.Any())
+                continue;
+            await channel.DeleteMessagesAsync(messages);
+        }
+
+    }
     public async Task SetReactChan(IGuild guild, ulong yesnt)
     {
         await using var uow = _db.GetDbContext();
