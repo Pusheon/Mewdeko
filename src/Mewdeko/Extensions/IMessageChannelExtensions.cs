@@ -20,8 +20,7 @@ public static class MessageChannelExtensions
         return ch.SendMessageAsync("", embed: eb.Build());
     }
 
-    public static Task<IUserMessage> SendErrorAsync(this IMessageChannel ch, string error) => ch.SendMessageAsync("", embed: new EmbedBuilder().WithErrorColor().WithDescription(error).Build(), components: new ComponentBuilder()
-        .WithButton(label: "Support Server", style: ButtonStyle.Link, url: "https://discord.gg/mewdeko").Build());
+    public static Task<IUserMessage> SendErrorAsync(this IMessageChannel ch, string error) => ch.SendMessageAsync("", embed: new EmbedBuilder().WithErrorColor().WithDescription(error).Build());
     public static Task<IUserMessage> SendConfirmAsync(this IMessageChannel ch, string title, string text,
         string? url = null, string? footer = null)
     {

@@ -10,6 +10,25 @@
 
     <ItemGroup>
         <Compile Remove="Modules\Administration\ModuleCommands.cs" />
+        <Compile Remove="Modules\Nsfw\Common\Downloaders\GelbooruImageDownloader.cs" />
+        <Compile Remove="Modules\Nsfw\SearchImagesService.cs" />
+        <Compile Remove="Modules\Nsfw\Common\Downloaders\DerpibooruImageDownloader.cs" />
+        <Compile Remove="Modules\Nsfw\Common\Downloaders\E621ImageDownloader.cs" />
+        <Compile Remove="Modules\Nsfw\Common\SafebooruElement.cs" />
+        <Compile Remove="Modules\Nsfw\Common\Downloaders\DanbooruImageDownloader.cs" />
+        <Compile Remove="Modules\Nsfw\Common\Downloaders\DapiImageDownloader.cs" />
+        <Compile Remove="Modules\Nsfw\Common\Downloaders\KonachanImageDownloader.cs" />
+        <Compile Remove="Modules\Nsfw\Common\SankakuImageObject.cs" />
+        <Compile Remove="Modules\Nsfw\Common\ImageData.cs" />
+        <Compile Remove="Modules\Nsfw\Common\Downloaders\ImageDownloader.cs" />
+        <Compile Remove="Modules\Nsfw\Common\Downloaders\SafebooruImageDownloader.cs" />
+        <Compile Remove="Modules\Nsfw\Common\Rule34Object.cs" />
+        <Compile Remove="Modules\Nsfw\Nsfw.cs" />
+        <Compile Remove="Modules\Nsfw\Common\Downloaders\YandereImageDownloader.cs" />
+        <Compile Remove="Modules\Nsfw\Common\Downloaders\SankakuImageDownloader.cs" />
+        <Compile Remove="Modules\Nsfw\SearchImageCacher.cs" />
+        <Compile Remove="Modules\Nsfw\Common\Downloaders\Rule34ImageDownloader.cs" />
+        <Compile Remove="Modules\Nsfw\Common\DapiImageObject.cs" />
     </ItemGroup>
 
 <!--    DO NOT DELETE   -->
@@ -170,6 +189,9 @@
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\Mewdeko.Database\Mewdeko.Database.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+      <Folder Include="Modules\Nsfw\Common\Downloaders" />
     </ItemGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'GlobalMewdeko' ">

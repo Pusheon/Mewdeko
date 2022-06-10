@@ -47,8 +47,7 @@ public class VerboseErrorsService : INService, IUnloadableService
                 .WithFooter($"Run {_ch.GetPrefix(channel.Guild?.Id)}ve to disable these prompts.")
                 .WithErrorColor();
 
-            await channel.SendMessageAsync(embed: embed.Build(), components: new ComponentBuilder()
-                                                                              .WithButton(label: "Support Server", style: ButtonStyle.Link, url: "https://discord.gg/mewdeko").Build()).ConfigureAwait(false);
+            await channel.SendMessageAsync(embed: embed.Build()).ConfigureAwait(false);
         }
         catch
         {
