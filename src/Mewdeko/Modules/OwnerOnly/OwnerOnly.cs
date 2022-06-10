@@ -135,10 +135,12 @@ public class OwnerOnly : MewdekoModuleBase<OwnerOnlyService>
             await ctx.Channel.SendErrorAsync("Max time to grab messages is 3 days. This will be increased in the near future.");
             return;
         }
+
+        var curTime = DateTime.UtcNow.ToString("yyyy-MM-ddTHH-mm-ssZ");
         using var process = new Process();
         process.StartInfo = new ProcessStartInfo
         {
-            Arguments = $"../ChatExporter/DiscordChatExporter.Cli.dll export -t {_credentials.Token} -c {channel?.Id ?? ctx.Channel.Id} --after {DateTime.UtcNow.Subtract(time.Time):yyyy-MM-ddTHH:mm:ssZ} --output \"{_credentials.ChatSavePath}/{ctx.Guild.Id}/{secureString}/{ctx.Guild.Name.Replace(" ", "-")}-{(channel?.Name ?? ctx.Channel.Name).Replace(" ", "-")}-{DateTime.UtcNow.Subtract(time.Time):yyyy-MM-ddTHH-mm-ssZ}.html\" --media true",
+            Arguments = $"../ChatExporter/DiscordChatExporter.Cli.dll export -t {_credentials.Token} -c {channel?.Id ?? ctx.Channel.Id} --after {DateTime.UtcNow.Subtract(time.Time):yyyy-MM-ddTHH:mm:ssZ} --output \"{_credentials.ChatSavePath}/{ctx.Guild.Id}/{secureString}/{ctx.Guild.Name.Replace(" ", "-")}-{(channel?.Name ?? ctx.Channel.Name).Replace(" ", "-")}-{curTime}.html\" --media true",
             FileName = "dotnet",
             UseShellExecute = false,
             RedirectStandardOutput = true,
@@ -153,7 +155,7 @@ public class OwnerOnly : MewdekoModuleBase<OwnerOnlyService>
         await ctx.OkAsync();
         if (_credentials.ChatSavePath == "/usr/share/nginx/cdn/chatlogs")
             await ctx.User.SendConfirmAsync(
-                $"Your chat log is here: https://cdn.mewdeko.tech/chatlogs/{ctx.Guild.Id}/{secureString}/{ctx.Guild.Name.Replace(" ", "-")}-{(channel?.Name ?? ctx.Channel.Name).Replace(" ", "-")}-{DateTime.UtcNow.Subtract(time.Time):yyyy-MM-ddTHH-mm-ssZ}.html");
+                $"Your chat log is here: https://cdn.mewdeko.tech/chatlogs/{ctx.Guild.Id}/{secureString}/{ctx.Guild.Name.Replace(" ", "-")}-{(channel?.Name ?? ctx.Channel.Name).Replace(" ", "-")}-{curTime}.html");
         else
             await ctx.Channel.SendConfirmAsync($"Your chat log is here: {_credentials.ChatSavePath}/{ctx.Guild.Id}/{secureString}");
     }
