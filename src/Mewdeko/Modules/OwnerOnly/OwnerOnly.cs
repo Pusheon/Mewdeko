@@ -147,33 +147,10 @@ public class OwnerOnly : MewdekoModuleBase<OwnerOnlyService>
         using (ctx.Channel.EnterTypingState())
         {
             process.Start();
-
-            // Synchronously read the standard output of the spawned process.
-            var reader = process.StandardOutput;
-
-            var output = await reader.ReadToEndAsync();
-            if (output.Length > 2000)
-            {
-                var chunkSize = 1988;
-                var stringLength = output.Length;
-                for (var i = 0; i < stringLength; i += chunkSize)
-                {
-                    if (i + chunkSize > stringLength) chunkSize = stringLength - i;
-                    await ctx.Channel.SendMessageAsync($"```bash\n{output.Substring(i, chunkSize)}```");
-                    await process.WaitForExitAsync();
-                }
-            }
-            else if (string.IsNullOrEmpty(output))
-            {
-                await ctx.Channel.SendMessageAsync("```The output was blank```");
-            }
-            else
-            {
-                await ctx.Channel.SendMessageAsync($"```bash\n{output}```");
-            }
         }
 
         await process.WaitForExitAsync();
+        await ctx.OkAsync();
         if (_credentials.ChatSavePath == "/usr/share/nginx/cdn/chatlogs")
             await ctx.User.SendConfirmAsync(
                 $"Your chat log is here: https://cdn.mewdeko.tech/chatlogs/{ctx.Guild.Id}/{secureString}/{ctx.Guild.Name.Replace(" ", "-")}-{(channel?.Name ?? ctx.Channel.Name).Replace(" ", "-")}-{DateTime.UtcNow.Subtract(time.Time):yyyy-MM-ddTHH-mm-ssZ}.html");
