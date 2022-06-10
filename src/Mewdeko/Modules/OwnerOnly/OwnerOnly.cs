@@ -174,7 +174,7 @@ public class OwnerOnly : MewdekoModuleBase<OwnerOnlyService>
         }
 
         await process.WaitForExitAsync();
-        if (_credentials.ChatSavePath == "/usr/share/nginx/cdn")
+        if (_credentials.ChatSavePath == "/usr/share/nginx/cdn/chatlogs")
             await ctx.User.SendConfirmAsync(
                 $"Your chat log is here: https://cdn.mewdeko.tech/chatlogs/{ctx.Guild.Id}/{secureString}/{ctx.Guild.Name.Replace(" ", "-")}-{(channel?.Name ?? ctx.Channel.Name).Replace(" ", "-")}-{DateTime.UtcNow.Subtract(time.Time):yyyy-MM-ddTHH-mm-ssZ}.html");
         else
