@@ -13,7 +13,6 @@ using Mewdeko.Common.TypeReaders;
 using Mewdeko.Modules.Gambling.Services;
 using Mewdeko.Modules.Gambling.Services.Impl;
 using Mewdeko.Modules.Music.Services;
-using Mewdeko.Modules.Nsfw;
 using Mewdeko.Modules.Searches.Services;
 using Mewdeko.Services.Impl;
 using Microsoft.Extensions.DependencyInjection;
@@ -140,7 +139,6 @@ public class Mewdeko
                     DisconnectOnStop = false,
                 })
                 .AddSingleton<IShopService, ShopService>()
-                .AddScoped<ISearchImagesService, SearchImagesService>()
                 .AddSingleton<ToneTagService>();
 
         s.AddHttpClient();

@@ -102,7 +102,7 @@ public sealed class Hangman : IDisposable
                 if (input != Term.Word) // failed
                     return;
 
-                var _ = OnGameEnded?.Invoke(this, userName);
+                var _ = OnGameEnded(this, userName);
                 CurrentPhase = Phase.Ended;
                 return;
             }
