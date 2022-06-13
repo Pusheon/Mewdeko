@@ -1,15 +1,8 @@
-﻿using Discord;
-using Discord.Commands;
-using Discord.WebSocket;
-using Mewdeko.Common;
+﻿using Discord.Commands;
 using Mewdeko.Common.Collections;
-using Mewdeko.Common.Replacements;
-using Mewdeko.Database;
-using Mewdeko.Database.Extensions;
-using Mewdeko.Database.Models;
-using Mewdeko.Extensions;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Concurrent;
+using System.Threading.Tasks;
 
 namespace Mewdeko.Modules.Administration.Services;
 
@@ -261,15 +254,16 @@ public class AdministrationService : INService
             return;
 
         var rep = new ReplacementBuilder()
-            .WithDefault(context)
-            .Build();
+                  .WithDefault(context)
+                  .Build();
 
-        if (SmartEmbed.TryParse(rep.Replace(text), out var embed, out var plainText))
+        if (SmartEmbed.TryParse(rep.Replace(text), context.Guild?.Id, out var embed, out var plainText, out var components))
         {
             await umsg.ModifyAsync(x =>
             {
                 x.Embed = embed?.Build();
                 x.Content = plainText?.SanitizeMentions();
+                x.Components = components.Build();
             }).ConfigureAwait(false);
         }
         else
@@ -278,6 +272,7 @@ public class AdministrationService : INService
             {
                 x.Content = text.SanitizeMentions();
                 x.Embed = null;
+                x.Components = null;
             }).ConfigureAwait(false);
         }
     }
