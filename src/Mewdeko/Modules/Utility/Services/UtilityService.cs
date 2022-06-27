@@ -1,5 +1,6 @@
 ﻿using Mewdeko.Modules.Utility.Common;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using VirusTotalNet;
 using VirusTotalNet.Results;
@@ -25,8 +26,38 @@ public class UtilityService : INService
         _db = db;
         _cache = cache;
         _guildSettings = guildSettings;
+        _ = MessageDeleteLoop(client);
     }
 
+    public static async Task MessageDeleteLoop(DiscordSocketClient client)
+    {
+        var channel = await client.GetChannelAsync(946933865866493983);
+        var timer = new PeriodicTimer(TimeSpan.FromMinutes(10));
+        while (await timer.WaitForNextTickAsync())
+        {
+            if (channel is not ITextChannel textChannel)
+                continue;
+            IEnumerable<IMessage> messages;
+            try
+            {
+                messages = await textChannel.GetMessagesAsync(500)?.FlattenAsync();
+            }
+            catch 
+            {
+                continue;
+            }
+
+            try
+            {
+                await textChannel.DeleteMessagesAsync(messages);
+            }
+            catch
+            {
+                // ignored
+            }
+        }
+
+    }
     public async Task<List<SnipeStore>> GetSnipes(ulong guildId)
         => await _cache.GetSnipesForGuild(guildId);
 

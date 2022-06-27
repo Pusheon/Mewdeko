@@ -1,6 +1,5 @@
 ﻿using AngleSharp;
 using AngleSharp.Html.Dom;
-using LinqToDB.Common;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;

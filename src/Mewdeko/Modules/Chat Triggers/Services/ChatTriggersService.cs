@@ -1,5 +1,4 @@
-﻿using LinqToDB.Common;
-using Mewdeko.Common.DiscordImplementations;
+﻿using Mewdeko.Common.DiscordImplementations;
 using Mewdeko.Common.ModuleBehaviors;
 using Mewdeko.Common.PubSub;
 using Mewdeko.Common.Yml;

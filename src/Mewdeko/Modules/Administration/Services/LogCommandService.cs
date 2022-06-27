@@ -5,7 +5,6 @@ using Mewdeko.Modules.Moderation.Services;
 using Mewdeko.Services.strings;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
-using Serilog;
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
